@@ -1,0 +1,225 @@
+[
+  {
+    "address": 100,
+    "length": 1,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "string",
+    "endianness" : "littleEndian",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "immediate/carstatus",
+    "title": "EV car status"
+  },
+  {
+    "address": 101,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 1000,
+    "unit" : "A",
+    "topic": "immediate/proximitycurrent",
+    "title": "Proximity Charge Current"
+  },
+  {
+    "address": 102,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "endianness" : "littleEndian",
+    "mqtt": "visible",
+    "interval": 10,
+    "unit" :"s",
+    "topic": "immediate/chargetime",
+    "title": "Chargetime"
+  },
+  {
+    "address": 200,
+    "modbustype": "discrete",
+    "modbusaccess": "readwrite",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitalinput/en",
+    "title": "Digital Input Enable"
+  },
+  {
+    "address": 201,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitalinput/xr",
+    "title": "Digital Input External Release"
+  },
+  {
+    "address": 202,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitalinput/ld",
+    "title": "Digital Input Lock Detection"
+  },
+  {
+    "address": 203,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitalinput/ml",
+    "title": "Digital Input Manual Lock"
+  },
+  {
+    "address": 204,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitaloutput/cr",
+    "title": "Digital Output Charger Ready"
+  },
+  {
+    "address": 205,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitaloutput/lr",
+    "title": "Digital Output Locking Request"
+  },
+  {
+    "address": 206,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitaloutput/vr",
+    "title": "Digital Output Vehicle Ready"
+  },
+  {
+    "address": 207,
+    "modbustype": "discrete",
+    "modbusaccess": "read",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/digitaloutput/er",
+    "title": "Digital Output Error"
+  },
+  {
+    "address": 400,
+    "modbustype": "coil",
+    "modbusaccess": "readwrite",
+    "valuetype": "bool",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/charging/enable",
+    "title": "Enable charging process"
+  },
+  {
+    "address": 300,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 5,
+    "unit" : "A",
+    "topic": "immediate/chargecurrent",
+    "title": "Current Charge Current"
+  },
+  {
+    "address": 301,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "macaddress",
+    "length" : 6,
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/macadddress",
+    "title": "Mac Address",
+  },
+  {
+    "address": 304,
+    "length": 12,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "string",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/serialnumber",
+    "title": "Serialnumber"
+  },
+  {
+    "address": 310,
+    "length": 10,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "string",
+    "mqtt": "visible",
+    "interval": 1000,
+    "topic": "settings/name",
+    "title": "Name"
+  },
+  {
+    "address": 315,
+    "length": 4,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "ipv4address",
+    "mqtt": "visible",
+    "interval": 1000,
+    "topic": "settings/ipv4address",
+    "title": "IPv4 Address"
+  },
+  {
+    "address": 319,
+    "length": 4,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "ipv4address",
+    "mqtt": "visible",
+    "interval": 1000,
+    "topic": "settings/ipv4netmask",
+    "title": "IPv4 Netmask"
+  },
+  {
+    "address": 323,
+    "length": 4,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "ipv4address",
+    "mqtt": "visible",
+    "interval": 1000,
+    "topic": "settings/ipv4gateway",
+    "title": "IPv4 Gateway"
+  },
+  {
+    "address": 388,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "settings/measuredeviceid",
+    "title": "Measurement device modbusid"
+  },
+  {
+    "address": 391,
+    "length": 15,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "string",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "settings/measuredevicename",
+    "title": "Measurement device name"
+  }
+]
