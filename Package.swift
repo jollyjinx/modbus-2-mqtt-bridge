@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from:"1.1.0" ), // revision:"3cad8ef"), // : "1.0.3"),
         .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.5.0"),
         .package(url: "https://github.com/jollyjinx/JLog", from:"0.0.4"),
-        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0-beta1"),
+        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0-beta2"),
 //        .package(path: "/Users/jolly/Documents/GitHub/SwiftLibModbus")
 //        .package(path: "/home/swift/SwiftLibModbus")
     ],
