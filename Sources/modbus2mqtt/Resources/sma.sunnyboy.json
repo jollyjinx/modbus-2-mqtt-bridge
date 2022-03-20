@@ -99,7 +99,7 @@
     "valuetype": "uint32",
     "mqtt": "visible",
     "interval": 10,
-    "topic": "immediate/speedwiresstate",
+    "topic": "immediate/speedwirestate",
     "title": "Speedwire connection State"
   },
   {
