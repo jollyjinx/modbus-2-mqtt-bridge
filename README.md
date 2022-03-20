@@ -10,14 +10,14 @@ The json in there is defined like this:
 {
   {
     "address": 40631,                   // modbus address
-    "length": 24,                       // strings need a length
     "modbustype": "holding",            // holding,coil,
     "modbusaccess": "readwrite",        // read/write/readwrite
     "valuetype": "string",              // string, ipv4address, macaddress, uint8, int8, uint16,...
-    "mqtt": "visible",                  // if shown in mqtt visible/invisible/retained
+    "length": 24,                       // strings need a length
     "interval": 1000,                   // interval being updated in seconds (decimal value like 0.2 possible)
                                         // interval of 0 means it will be requested only at start and then 
                                         // using mqtt retain to retain it.
+    "mqtt": "visible",                  // if shown in mqtt visible/invisible/retained
     "topic": "settings/name",           // topic to post values
     "title": "Name"                     // description for gui (like node-red)
   },
