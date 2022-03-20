@@ -103,10 +103,57 @@
     "title": "Speedwire connection State"
   },
   {
-    "address": 31405,
+    "address": 31255,
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltagea",
+    "title": "Voltage Phase A"
+  },
+  {
+    "address": 31257,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltageb",
+    "title": "Voltage Phase B"
+  },
+  {
+    "address": 31253,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltagec",
+    "title": "Voltage Phase C"
+  },
+  {
+    "address": 30571,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/selfconsumption",
+    "title": "Current self consumption"
+  },
+  {
+    "address": 31405,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "int32",
     "unit": "W",
     "mqtt": "visible",
     "interval": 5,
@@ -122,8 +169,8 @@
     "unit": "kWh",
     "mqtt": "visible",
     "interval": 60,
-    "topic": "counter/dailyyield",
-    "title": "Daily Yield"
+    "topic": "counter/dailydischarge",
+    "title": "Daily Discharge"
   },
   {
     "address": 30513,
@@ -134,7 +181,7 @@
     "unit": "kWh",
     "mqtt": "visible",
     "interval": 1000,
-    "topic": "counter/totalyield",
+    "topic": "counter/totaldischarge",
     "title": "Total Yield"
   },
   {
@@ -147,7 +194,7 @@
     "mqtt": "visible",
     "interval": 1000,
     "topic": "counter/totalfeedin",
-    "title": "Total Yield"
+    "title": "Total Feedin"
   },
   {
     "address": 30581,
@@ -166,36 +213,24 @@
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "int32",
-    "factor": 1,
     "unit": "W",
     "mqtt": "visible",
-    "interval": 5,
-    "topic": "immediate/generation",
-    "title": "Power AC"
+    "interval": 1,
+    "factor:" : -1,
+    "topic": "immediate/gridusage",
+    "title": "Grid Usage"
   },
   {
-    "address": 30773,
+    "address": 30803,
     "modbustype": "holding",
     "modbusaccess": "read",
-    "valuetype": "int32",
-    "factor": 1,
-    "unit": "W",
+    "valuetype": "uint32",
+    "factor": 100,
+    "unit": "Hz",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/stringa",
-    "title": "Power DC String A"
-  },
-  {
-    "address": 30961,
-    "modbustype": "holding",
-    "modbusaccess": "read",
-    "valuetype": "int32",
-    "factor": 1,
-    "unit": "W",
-    "mqtt": "visible",
-    "interval": 5,
-    "topic": "immediate/stringb",
-    "title": "Power DC String B"
+    "topic": "immediate/gridfreqency",
+    "title": "Grid Freequency"
   },
   {
     "address": 34109,
@@ -220,5 +255,86 @@
     "interval": 120,
     "topic": "immediate/internaltemperature",
     "title": "Internal Temperature"
+  },
+  {
+    "address": 31393,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/charge",
+    "title": "Battery charge Power"
+  },
+  {
+    "address": 31395,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/discharge",
+    "title": "Battery discharge Power"
+  },
+  {
+    "address": 30845,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "%",
+    "mqtt": "visible",
+    "interval": 30,
+    "topic": "immediate/soc",
+    "title": "Battery State of Charge"
+  },
+  {
+    "address": 30849,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "int32",
+    "factor": 10,
+    "unit": "ºC",
+    "mqtt": "visible",
+    "interval": 120,
+    "topic": "immediate/batterytemperature",
+    "title": "Battery Temperature"
+  },
+  {
+    "address": 30535,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "factor": 1000,
+    "unit": "kWh",
+    "mqtt": "visible",
+    "interval": 120,
+    "topic": "immediate/dailydischarge",
+    "title": "Discharge Today"
+  },
+  {
+    "address": 31401,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint64",
+    "factor": 1000,
+    "unit": "kWh",
+    "mqtt": "visible",
+    "interval": 120,
+    "topic": "counter/totaldischarge",
+    "title": "Total Discharge"
+  },
+  {
+    "address": 31397,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint64",
+    "factor": 1000,
+    "unit": "kWh",
+    "mqtt": "visible",
+    "interval": 120,
+    "topic": "counter/totalcharge",
+    "title": "Total Charge"
   }
 ]

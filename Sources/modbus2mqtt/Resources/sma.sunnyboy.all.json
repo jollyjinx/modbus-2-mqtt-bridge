@@ -103,6 +103,53 @@
     "title": "Speedwire connection State"
   },
   {
+    "address": 31255,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltagea",
+    "title": "Voltage Phase A"
+  },
+  {
+    "address": 31257,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltageb",
+    "title": "Voltage Phase B"
+  },
+  {
+    "address": 31253,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "V",
+    "factor" : 100,
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/voltagec",
+    "title": "Voltage Phase C"
+  },
+  {
+    "address": 30571,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/selfconsumption",
+    "title": "Current self consumption"
+  },
+  {
     "address": 31405,
     "modbustype": "holding",
     "modbusaccess": "read",
@@ -196,6 +243,18 @@
     "interval": 5,
     "topic": "immediate/stringb",
     "title": "Power DC String B"
+  },
+  {
+    "address": 30803,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "factor": 100,
+    "unit": "Hz",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "immediate/gridfreqency",
+    "title": "Grid Freequency"
   },
   {
     "address": 34109,
