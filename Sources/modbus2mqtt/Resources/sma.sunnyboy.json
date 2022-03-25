@@ -98,6 +98,7 @@
     "modbusaccess": "read",
     "valuetype": "uint32",
     "mqtt": "visible",
+    "publishalways" : true,
     "interval": 10,
     "topic": "immediate/speedwirestate",
     "title": "Speedwire connection State"
@@ -169,7 +170,7 @@
     "factor": 1,
     "unit": "W",
     "mqtt": "visible",
-    "interval": 5,
+    "interval": 1,
     "topic": "immediate/generation",
     "title": "Power AC"
   },

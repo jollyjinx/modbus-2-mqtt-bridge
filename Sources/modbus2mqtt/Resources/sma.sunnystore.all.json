@@ -98,6 +98,7 @@
     "modbusaccess": "read",
     "valuetype": "uint32",
     "mqtt": "visible",
+    "publishalways" : true,
     "interval": 10,
     "topic": "immediate/speedwirestate",
     "title": "Speedwire connection State"

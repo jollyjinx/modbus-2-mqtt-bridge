@@ -246,7 +246,7 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
 
     while true
     {
-        let mbd = modbusDefinitions.values.sorted(by:{ $0.nextReadDate < $1.nextReadDate }).first! as ModbusDefinition
+        let mbd = modbusDefinitions.values.min(by:{ $0.nextReadDate < $1.nextReadDate })! as ModbusDefinition
 
         while( mbd.nextReadDate > Date() )
         {
@@ -256,12 +256,13 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
             JLog.debug("waited.")
         }
 
-        JLog.debug("reading:\(mbd)")
 
         let payload:ModbusValue
 
         do
         {
+            JLog.debug("reading:\(mbd)")
+
             switch mbd.valuetype
             {
                 case .bool:     let value = try await modbusDevice.readInputBitsFrom(startAddress: mbd.address, count: 1, type:mbd.modbustype).first!
@@ -304,9 +305,14 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
             }
             errorCounter = 0
 
+            JLog.debug("read:\(payload)")
+
             if !mqttClient.isConnected
             {
                 JLog.error("No longer connected to mqtt server - reconnecting")
+
+                retainedMessageCache.removeAll()
+                modbusDefinitions.keys.forEach{ address in modbusDefinitions[address]!.nextReadDate = .distantPast }
 
                 try await mqttClient.reconnect()
 
@@ -317,7 +323,9 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
             }
 
             let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
-            if  retained,
+            let publish = mbd.publishAlways ?? false
+
+            if  !publish && retained,
                 let lastValue = retainedMessageCache[mbd.topic], lastValue == payload.value
             {
                 JLog.debug("Value did not change")
