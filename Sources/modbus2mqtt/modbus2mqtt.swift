@@ -323,7 +323,7 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
             }
 
             let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
-            let publish = mbd.publishAlways ?? false
+            let publish = mbd.publishalways ?? false
 
             if  !publish && retained,
                 let lastValue = retainedMessageCache[mbd.topic], lastValue == payload.value

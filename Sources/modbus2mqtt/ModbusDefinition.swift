@@ -49,7 +49,7 @@ struct ModbusDefinition:Encodable,Decodable
     let unit:String?
 
     let mqtt:MQTTVisibilty
-    let publishAlways:Bool?
+    let publishalways:Bool?
     let interval:Double
     let topic:String
     let title:String
