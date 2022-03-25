@@ -246,118 +246,105 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
 
     while true
     {
-        let dateNow = Date()
-        var nextLoopDate:Date = Date.init(timeIntervalSinceNow: 1000.0)
+        let mbd = modbusDefinitions.values.sorted(by:{ $0.nextReadDate < $1.nextReadDate }).first! as ModbusDefinition
 
-        for address in modbusDefinitions.keys
+        while( mbd.nextReadDate > Date() )
         {
-            let mbd = modbusDefinitions[address]!
-
-            if mbd.nextReadDate < dateNow
-            {
-                JLog.debug("reading:\(mbd)")
-
-                let payload:ModbusValue
-
-                do
-                {
-                    switch mbd.valuetype
-                    {
-                        case .bool:     let value = try await modbusDevice.readInputBitsFrom(startAddress: mbd.address, count: 1, type:mbd.modbustype).first!
-                                        payload = ModbusValue(address:address,value:.bool(value))
-
-                        case .uint8:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt8]).first!
-                                        payload = ModbusValue(address:address,value:.uint8(value))
-
-                        case .int8:     let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int8]).first!
-                                        payload = ModbusValue(address:address,value:.int8(value))
-
-                        case .uint16:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt16]).first!
-                                        payload = ModbusValue(address:address,value:.uint16(value))
-
-                        case .int16:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int16]).first!
-                                        payload = ModbusValue(address:address,value:.int16(value))
-
-                        case .uint32:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt32]).first!
-                                        payload = ModbusValue(address:address,value:.uint32(value))
-
-                        case .int32:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int32]).first!
-                                        payload = ModbusValue(address:address,value:.int32(value))
-
-                        case .uint64:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt64]).first!
-                                        payload = ModbusValue(address:address,value:.uint64(value))
-
-                        case .int64:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int64]).first!
-                                        payload = ModbusValue(address:address,value:.int64(value))
-
-                        case .string:   let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian)
-                                        payload = ModbusValue(address:address,value:.string(value))
-
-                        case .ipv4address:  let array = try await modbusDevice.readRegisters(from: mbd.address, count:4, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt16]
-                                            let value = array.map{String($0)}.joined(separator: ".")
-                                        payload = ModbusValue(address:address,value:.string(value))
-
-                        case .macaddress:  let array = try await modbusDevice.readRegisters(from: mbd.address, count:mbd.length!, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt8]
-                                            let value = array.map{String(format:"%02X",$0)}.joined(separator: ":")
-                                        payload = ModbusValue(address:address,value:.string(value))
-                    }
-                    errorCounter = 0
-
-                    if !mqttClient.isConnected
-                    {
-                        JLog.error("No longer connected to mqtt server - reconnecting")
-
-                        try await mqttClient.reconnect()
-
-                        guard mqttClient.isConnected else
-                        {
-                            fatalError("Could not connect to mqtt server")
-                        }
-                    }
-
-                    let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
-                    if  retained,
-                        let lastValue = retainedMessageCache[mbd.topic], lastValue == payload.value
-                    {
-                        JLog.debug("Value did not change")
-                    }
-                    else
-                    {
-                        retainedMessageCache[mbd.topic] = payload.value
-
-                        let topic = "\(mqttServer.topic)/\(mbd.topic)"
-                        try await mqttClient.publish( MQTTMessage(topic: topic,
-                                                payload: payload.json,
-                                                retain: retained)
-                                               )
-                    }
-                    let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)
-                    modbusDefinitions[address]!.nextReadDate = nextReadDate
-                    JLog.debug("nextReadDate:\(nextReadDate)")
-
-
-                    nextLoopDate = min(nextLoopDate,nextReadDate)
-                }
-                catch let error
-                {
-                    errorCounter += 1
-                    if errorCounter > 10
-                    {
-                        throw error
-                    }
-                    JLog.error("got error:\(error) - ignoring errorcounter:\(errorCounter)")
-                    nextLoopDate = min(nextLoopDate,Date(timeIntervalSinceNow: mbd.interval))
-                }
-            }
-        }
-        repeat
-        {
-            let timeToWait:TimeInterval = max(options.interval,nextLoopDate.timeIntervalSinceNow)
-            JLog.debug("nextLoopDate:\(nextLoopDate) mininterval:\(options.interval) timetowait:\(timeToWait)")
+            let timeToWait:TimeInterval = max(options.interval,mbd.nextReadDate.timeIntervalSinceNow)
+            JLog.debug("nextLoopDate:\(String(describing: mbd.nextReadDate)) mininterval:\(options.interval) timetowait:\(timeToWait)")
             try? await Task.sleep(nanoseconds: UInt64( timeToWait * Double(NSEC_PER_SEC) ) )
             JLog.debug("waited.")
         }
-        while( nextLoopDate > Date() )
+
+        JLog.debug("reading:\(mbd)")
+
+        let payload:ModbusValue
+
+        do
+        {
+            switch mbd.valuetype
+            {
+                case .bool:     let value = try await modbusDevice.readInputBitsFrom(startAddress: mbd.address, count: 1, type:mbd.modbustype).first!
+                                payload = ModbusValue(address:mbd.address,value:.bool(value))
+
+                case .uint8:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt8]).first!
+                                payload = ModbusValue(address:mbd.address,value:.uint8(value))
+
+                case .int8:     let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int8]).first!
+                                payload = ModbusValue(address:mbd.address,value:.int8(value))
+
+                case .uint16:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt16]).first!
+                                payload = ModbusValue(address:mbd.address,value:.uint16(value))
+
+                case .int16:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int16]).first!
+                                payload = ModbusValue(address:mbd.address,value:.int16(value))
+
+                case .uint32:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt32]).first!
+                                payload = ModbusValue(address:mbd.address,value:.uint32(value))
+
+                case .int32:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int32]).first!
+                                payload = ModbusValue(address:mbd.address,value:.int32(value))
+
+                case .uint64:   let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt64]).first!
+                                payload = ModbusValue(address:mbd.address,value:.uint64(value))
+
+                case .int64:    let value = (try await modbusDevice.readRegisters(from: mbd.address, count: 1,type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [Int64]).first!
+                                payload = ModbusValue(address:mbd.address,value:.int64(value))
+
+                case .string:   let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian)
+                                payload = ModbusValue(address:mbd.address,value:.string(value))
+
+                case .ipv4address:  let array = try await modbusDevice.readRegisters(from: mbd.address, count:4, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt16]
+                                    let value = array.map{String($0)}.joined(separator: ".")
+                                payload = ModbusValue(address:mbd.address,value:.string(value))
+
+                case .macaddress:  let array = try await modbusDevice.readRegisters(from: mbd.address, count:mbd.length!, type:mbd.modbustype,endianness:mbd.endianness ?? .bigEndian) as [UInt8]
+                                    let value = array.map{String(format:"%02X",$0)}.joined(separator: ":")
+                                payload = ModbusValue(address:mbd.address,value:.string(value))
+            }
+            errorCounter = 0
+
+            if !mqttClient.isConnected
+            {
+                JLog.error("No longer connected to mqtt server - reconnecting")
+
+                try await mqttClient.reconnect()
+
+                guard mqttClient.isConnected else
+                {
+                    fatalError("Could not connect to mqtt server")
+                }
+            }
+
+            let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
+            if  retained,
+                let lastValue = retainedMessageCache[mbd.topic], lastValue == payload.value
+            {
+                JLog.debug("Value did not change")
+            }
+            else
+            {
+                retainedMessageCache[mbd.topic] = payload.value
+
+                let topic = "\(mqttServer.topic)/\(mbd.topic)"
+                try await mqttClient.publish( MQTTMessage(topic: topic,
+                                        payload: payload.json,
+                                        retain: retained)
+                                       )
+            }
+            let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)
+            modbusDefinitions[mbd.address]!.nextReadDate = nextReadDate
+            JLog.debug("nextReadDate:\(nextReadDate)")
+        }
+        catch let error
+        {
+            errorCounter += 1
+            if errorCounter > 10
+            {
+                throw error
+            }
+            JLog.error("got error:\(error) - ignoring errorcounter:\(errorCounter)")
+        }
     }
 }
 
