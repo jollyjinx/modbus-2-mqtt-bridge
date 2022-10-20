@@ -199,9 +199,9 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
                 do
                 {
                     JLog.debug("known:\(knownRequests)")
-                    guard !knownRequests.contains(request)                   else { throw RequestError.requestAnswered }
-                    guard request.date.timeIntervalSinceNow > -requestTTL   else { throw RequestError.requestDateInFuture }
-                    guard request.date.timeIntervalSinceNow < requestTTL    else { throw RequestError.requestDateOutdated }
+                    guard !knownRequests.contains(request)                  else { throw RequestError.requestAnswered }
+                    guard request.date.timeIntervalSinceNow > -requestTTL   else { throw RequestError.requestDateOutdated }
+                    guard request.date.timeIntervalSinceNow < requestTTL    else { throw RequestError.requestDateInFuture }
                     guard let mbd = staticDefinitions.first(where:{ $0.topic == request.topic} ) else { throw RequestError.noTopicFound }
 
                     if mbd.modbusaccess == .read
