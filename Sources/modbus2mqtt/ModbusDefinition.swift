@@ -2,16 +2,17 @@
 //  Created by Patrick Stein on 18.03.22.
 //
 
-import Foundation
+@preconcurrency import Foundation
 import SwiftLibModbus
 import JLog
 
-public enum MQTTVisibilty:String,Encodable,Decodable
+
+public enum MQTTVisibilty:String,Encodable,Decodable,Sendable
 {
     case invisible,visible,retained
 }
 
-struct ModbusDefinition:Encodable,Decodable
+struct ModbusDefinition:Encodable,Decodable,Sendable
 {
     enum ModbusAccess:String,Encodable,Decodable
     {

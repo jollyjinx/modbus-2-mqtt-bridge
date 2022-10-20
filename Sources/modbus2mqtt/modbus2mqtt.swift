@@ -74,18 +74,24 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "If mqttTopic has a refreshtime larger than this value it will be ratained.")
     var mqttAutoRetainTime: Double = 10.0
 
+    @Option(name: .long, help: "Serial Modbus Device path")
+    var modbusDevicePath:String = ""
+
+    @Option(name: .long, help: "Serial Modbus Speed")
+    var modbusSerialSpeed:Int = 9600
 
     @Option(name: .shortAndLong, help: "Modbus Device Servername.")
     var modbusServer: String = "modbus.example.com"
 
     @Option(name: .long, help: "Modbus Device Port number.")
-    var modbusPort: UInt16 = 502;
+    var modbusPort: UInt16 = 502
 
     @Option(name: .long, help: "Modbus Device Address.")
-    var modbusAddress: UInt16 = 3;
+    var modbusAddress: UInt16 = 3
 
     @Option(name: .long, help: "Modbus Device Description file (JSON).")
     var deviceDescriptionFile = "sma.sunnyboy.json"
+
 
 
     mutating func run() async throws
@@ -93,7 +99,17 @@ struct modbus2mqtt: AsyncParsableCommand
         do
         {
             let mqttServer  = JNXMQTTServer(server: JNXServer(hostname: mqttServer, port: mqttPort,username:mqttUsername,password:mqttPassword), emitInterval: interval, topic: topic)
-            let modbusDevice = try ModbusDevice(networkAddress:modbusServer,port:modbusPort,deviceAddress:modbusAddress)
+
+            let modbusDevice:ModbusDevice
+
+            if modbusDevicePath.isEmpty
+            {
+                modbusDevice = try ModbusDevice(networkAddress:modbusServer,port:modbusPort,deviceAddress:modbusAddress)
+            }
+            else
+            {
+                modbusDevice = try ModbusDevice(device: modbusDevicePath,baudRate: modbusSerialSpeed)
+            }
 
             if debug > 0
             {
@@ -352,6 +368,10 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
                 throw error
             }
             JLog.error("got error:\(error) - ignoring errorcounter:\(errorCounter)")
+
+            let waittime =  30.0 * Double(errorCounter)
+            JLog.error("Waiting \(waittime) seconds")
+            try? await Task.sleep(nanoseconds: UInt64( waittime * Double(NSEC_PER_SEC) ) )
         }
     }
 }

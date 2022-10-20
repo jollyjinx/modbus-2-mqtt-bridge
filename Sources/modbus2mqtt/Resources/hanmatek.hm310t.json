@@ -1,0 +1,38 @@
+[
+  {
+    "address": 16,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "current/voltage",
+    "title": "voltage"
+  },
+  {
+    "address": 17,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "current/current",
+    "title": "current"
+  },
+  {
+    "address": 18,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "factor": 1000,
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "current/power",
+    "title": "power"
+  }
+]
