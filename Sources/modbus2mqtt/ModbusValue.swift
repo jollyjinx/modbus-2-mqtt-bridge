@@ -32,8 +32,6 @@ public enum ModbusType:Equatable
 }
 extension ModbusType:Decodable {}
 
-
-
 extension ModbusValue:Encodable
 {
     public var json:String
@@ -71,18 +69,15 @@ extension ModbusValue:Encodable
             try container.encode(mbd.topic   ,forKey:.topic)
         }
 
-        let factor      = mbd.factor
-        let hasFactor   = mbd.factor != nil && mbd.factor! != 0 && mbd.factor! != 1
-
         switch value
         {
             case .bool(let value):      try container.encode(value,forKey:.value)
 
-            case .uint8(let value):    try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
-            case .int8(let value):     try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+            case .uint8(let value):    try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
+            case .int8(let value):     try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
             
-            case .uint16(let value):    try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
-            case .int16(let value):     try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+            case .uint16(let value):    try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
+            case .int16(let value):     try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
 
             case .uint32(let value):    if value == UInt32.max
                                         {
@@ -91,7 +86,7 @@ extension ModbusValue:Encodable
                                         }
                                         else
                                         {
-                                            try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
                                         }
             case .int32(let value):     if value == Int32.min
                                         {
@@ -100,7 +95,7 @@ extension ModbusValue:Encodable
                                         }
                                         else
                                         {
-                                            try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
                                         }
 
 
@@ -111,7 +106,7 @@ extension ModbusValue:Encodable
                                         }
                                         else
                                         {
-                                            try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
                                         }
             case .int64(let value):     if value == Int64.min
                                         {
@@ -120,7 +115,7 @@ extension ModbusValue:Encodable
                                         }
                                         else
                                         {
-                                            try container.encode( hasFactor ? Decimal(value) / factor! : Decimal(value),forKey:.value)
+                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
                                         }
             case .string(let value):    try container.encode(value,forKey:.value)
         }

@@ -182,7 +182,7 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
             if  let data = message.payload.string?.data(using: .utf8),
                 let request = try? decoder.decode(MQTTRequest.self, from: data)
             {
-                JLog.debug("Got json \(request)")
+                JLog.debug("Got Request:\(request)")
                 let response:MQTTResponse
 
                 enum RequestError:Error
@@ -198,9 +198,10 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
 
                 do
                 {
-                    guard knownRequests.contains(request)                   else { throw RequestError.requestAnswered }
-                    guard request.date.timeIntervalSinceNow < -requestTTL   else { throw RequestError.requestDateInFuture }
-                    guard request.date.timeIntervalSinceNow > requestTTL    else { throw RequestError.requestDateOutdated }
+                    JLog.debug("known:\(knownRequests)")
+                    guard !knownRequests.contains(request)                   else { throw RequestError.requestAnswered }
+                    guard request.date.timeIntervalSinceNow > -requestTTL   else { throw RequestError.requestDateInFuture }
+                    guard request.date.timeIntervalSinceNow < requestTTL    else { throw RequestError.requestDateOutdated }
                     guard let mbd = staticDefinitions.first(where:{ $0.topic == request.topic} ) else { throw RequestError.noTopicFound }
 
                     if mbd.modbusaccess == .read
@@ -217,7 +218,9 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
                                                             try await modbusDevice.writeASCIIString(start: mbd.address, count: mbd.length!, string: value)
 
                         case (.uint16,.decimal(let value)): JLog.debug("decimal:\(value)");
-                                                            guard let intValue:UInt16 = UInt16(value.description) else { throw RequestError.valueTypeConversionError }
+                                                            let factored = mbd.hasFactor ? value * mbd.factor! : value
+                                                            JLog.debug("factored:\(factored)")
+                                                            guard let intValue:UInt16 = UInt16(factored.description) else { throw RequestError.valueTypeConversionError }
                                                             JLog.debug("Intvalue:\(intValue)")
 
                                                             try await modbusDevice.writeRegisters(to: mbd.address, arrayToWrite: [intValue], endianness: mbd.endianness ?? .bigEndian)
@@ -228,12 +231,12 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
                 }
                 catch let error
                 {
+                    JLog.error("Could not work on request: \(request) due to:\(error)")
                     response = MQTTResponse(date:Date(),id:request.id,success: false,error:"\(error)")
                 }
 
                 knownRequests = knownRequests.filter({ $0.date.timeIntervalSinceNow < requestTTL })
                 knownRequests.insert(request)
-
 
                 let topic = "\(mqttServer.topic)/response/\(request.id)"
 

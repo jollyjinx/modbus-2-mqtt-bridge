@@ -1,15 +1,65 @@
 [
   {
+    "address": 1,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "status/output",
+    "title": "Output Status"
+  },
+  {
+    "address": 2,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 2,
+    "topic": "status/locked",
+    "title": "Keys Locked"
+  },
+  {
+    "address": 3,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/type",
+    "title": "Type"
+  },
+  {
+    "address": 4,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/class",
+    "title": "Classification"
+  },
+  {
+    "address": 5,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/accuracy",
+    "title": "V A W digit capacity"
+  },
+  {
     "address": 16,
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "uint16",
-    "factor": 1000,
+    "factor": 100,
     "unit": "V",
     "mqtt": "visible",
     "interval": 1,
     "topic": "current/voltage",
-    "title": "voltage"
+    "title": "Output Voltage"
   },
   {
     "address": 17,
@@ -21,7 +71,7 @@
     "mqtt": "visible",
     "interval": 1,
     "topic": "current/current",
-    "title": "current"
+    "title": "Output Current"
   },
   {
     "address": 18,
@@ -33,6 +83,76 @@
     "mqtt": "visible",
     "interval": 1,
     "topic": "current/power",
-    "title": "power"
+    "title": "Output Power"
+  },
+  {
+    "address": 32,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "overoutput/voltage",
+    "title": "Over Output Voltage"
+  },
+  {
+    "address": 33,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "overoutput/current",
+    "title": "Over Output Current"
+  },
+  {
+    "address": 34,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "factor": 1000000,
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 5,
+    "topic": "overoutput/power",
+    "title": "Over Output Power"
+  },
+  {
+    "address": 48,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "set/voltage",
+    "title": "Set Voltage"
+  },
+  {
+    "address": 49,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "set/current",
+    "title": "Set Current"
+  },
+  {
+    "address": 39321,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "int16",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/address",
+    "title": "Modbus Communication Address"
   }
 ]

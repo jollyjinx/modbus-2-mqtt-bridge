@@ -60,7 +60,19 @@ struct MQTTResponse:Encodable,Decodable
 }
 ```
 
-in topic named topic/reqeust and topic/response
+in topic named topic/request and topic/response
+
+e.g. To set the output voltage of the HM310T you can send json in form like 
+
+```
+{
+  "value": 14.04,
+  "date": "2022-10-20T16:07:46+00",
+  "topic": "set/voltage",
+  "id": "D2129DBF-9F94-56D7-86BC-7A07152FF1D8"
+}```
+
+to the topic *hm310/request/jollysrequest*
 
 
 ## Status

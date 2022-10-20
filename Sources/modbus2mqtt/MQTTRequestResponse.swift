@@ -37,6 +37,16 @@ struct MQTTRequest:Encodable,Decodable,Hashable,Equatable
     let id:UUID
     let topic:String
     let value:MQTTCommandValue
+
+    static func ==(lhs:Self,rhs:Self) -> Bool
+    {
+        return lhs.id == rhs.id
+    }
+
+    func hash(into hasher: inout Hasher)
+    {
+        return id.hash(into: &hasher)
+    }
 }
 
 struct MQTTResponse:Encodable,Decodable

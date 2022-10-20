@@ -77,3 +77,8 @@ extension ModbusDefinition
 }
 
 
+extension ModbusDefinition
+{
+    var hasFactor:Bool { self.factor != nil && self.factor! != 0 && self.factor! != 1 }
+}
+
