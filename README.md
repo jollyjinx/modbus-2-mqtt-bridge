@@ -1,10 +1,18 @@
 # modbus2mqtt Bridge
 
-modbus2mqtt bridge allows you to have modbus capable devices beeing available in mqtt. 
-It works on Macs and Linux computers (e.g raspberry pi)
+*modbus2mqtt* allows you to have modbus capable devices (Ethernet/USB/Serial) being available in MQTT.
+ 
+It works on standard swift platforms. I works on macOS and Linux computers (e.g raspberry pi), but should work on swift for windows as well.
 
-Setup which modbus values are shown and how often are defined in a json file. SMA sunnyboys, SMA sunnystore and Phoenix Contact chargecontroller json definition files are included.
-The json in there is defined like this:
+## Have any Modbus device brigded to MQTT 
+
+It comes with json definition files for:
+    - SMA sunnyboy inverters
+    - SMA sunnystore inverters
+    - Phoenix Contact electric vehicle chargecontroller
+    - Hanmatek HM310T laboratory power supply
+
+It's easy to setup your own modbus2mqtt definition file. A json definition file looks like this:
 
 ```
 {
@@ -37,10 +45,28 @@ The json in there is defined like this:
 }
 ```
 
-## Bridge
+Remark: Be aware that json does not support comments like in this example.
 
-As it's a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
-It uses a Request/Response pattern with messages like this:
+
+## Bridge goes both ways
+
+*modbus2mqtt* is a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
+It uses a Request/Response pattern. You send a mqtt request to the mqtt request topic and are give the result of the request in the response topic path.
+
+To set the output voltage of the HM310T to 14.04 Volt you can send the following json 
+
+```
+{
+  "value": 14.04,
+  "date": "2022-10-20T16:07:46+00",
+  "topic": "set/voltage",
+  "id": "D2129DBF-9F94-56D7-86BC-7A07152FF1D8"
+}
+```
+
+to the topic *hm310/request/jollysrequest* of the MQTT server. The bridge will pickup the request and return the response to the response topic *hm310/response/D2129DBF-9F94-56D7-86BC-7A07152FF1D8* .
+
+In swift Request/Responses are defined as follows.
 
 ```
 struct MQTTRequest:Encodable,Decodable,Hashable,Equatable
@@ -60,28 +86,24 @@ struct MQTTResponse:Encodable,Decodable
 }
 ```
 
-in topic named topic/request and topic/response
-
-e.g. To set the output voltage of the HM310T you can send json in form like 
-
-```
-{
-  "value": 14.04,
-  "date": "2022-10-20T16:07:46+00",
-  "topic": "set/voltage",
-  "id": "D2129DBF-9F94-56D7-86BC-7A07152FF1D8"
-}```
-
-to the topic *hm310/request/jollysrequest*
-
 
 ## Status
 
-Right now it's a proof of concept. It's a quick hack, it works though. 
+I'm using it 24/7 on my own modbus devices (the devices I created JSON definitions for).
 
-
+Starting the application
 
 ```
+> modbus2mqtt --topic=sma/sunnystore \
+              --modbus-server=sunnyboy.local \
+              --mqtt-server=mqtt.local \
+              --device-description-file=sma.sunnystore.json
+```
+
+It supports command line help:
+
+```
+> ./.build/debug/modbus2mqtt --help 
 USAGE: modbus2mqtt <options>
 
 OPTIONS:
@@ -99,6 +121,10 @@ OPTIONS:
                           Maximum time a mqttRequest can lie in the future/past to be accepted. (default: 1000.0)
   --mqtt-auto-retain-time <mqtt-auto-retain-time>
                           If mqttTopic has a refreshtime larger than this value it will be ratained. (default: 10.0)
+  --modbus-device-path <modbus-device-path>
+                          Serial Modbus Device path
+  --modbus-serial-speed <modbus-serial-speed>
+                          Serial Modbus Speed (default: 9600)
   -m, --modbus-server <modbus-server>
                           Modbus Device Servername. (default: modbus.example.com)
   --modbus-port <modbus-port>
@@ -106,11 +132,11 @@ OPTIONS:
   --modbus-address <modbus-address>
                           Modbus Device Address. (default: 3)
   --device-description-file <device-description-file>
-                          Modbus Device Description file (JSON). (default: sma.sunnyboy)
+                          Modbus Device Description file (JSON). (default: sma.sunnyboy.json)
   -h, --help              Show help information.
+
 ```
 
+## Feedback welcome
 
-
-
-
+In case you add json definitions for your own devices, create pull requests. 
