@@ -12,7 +12,7 @@ public enum MQTTVisibilty:String,Encodable,Decodable,Sendable
     case invisible,visible,retained
 }
 
-struct ModbusDefinition:Encodable,Decodable,Sendable
+struct ModbusDefinition:Encodable,Sendable
 {
     enum ModbusAccess:String,Encodable,Decodable
     {
@@ -57,6 +57,61 @@ struct ModbusDefinition:Encodable,Decodable,Sendable
 
     var nextReadDate:Date! = .distantPast
 }
+
+
+
+
+
+extension ModbusDefinition:Decodable
+{
+    enum CodingKeys: String, CodingKey
+    {
+        case address,length,modbustype,modbusaccess,endianness,valuetype,factor,unit,mqtt,publishalways,interval,topic,title,nextReadDate
+    }
+
+    public init(from decoder: Decoder) throws
+    {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        if let address = try? container.decode(Int.self, forKey: .address)
+        {
+            self.address = address
+        }
+        else
+        {
+            let addressString:String = try container.decode(String.self, forKey: .address)
+            JLog.debug("addressString: \(addressString)")
+
+            guard let address = addressString.hasPrefix("0x") ? Int(addressString.dropFirst(2),radix: 16) : Int(addressString)
+            else
+            {
+                throw DecodingError.dataCorruptedError(forKey: .address, in: container, debugDescription: "Could not decode string \(addressString) as Int")
+            }
+            self.address = address
+        }
+        JLog.debug("address: \(self.address)")
+
+        self.length         = try?  container.decode(Int.self, forKey: .length)
+        self.modbustype     = try   container.decode(ModbusRegisterType.self, forKey: .modbustype)
+        self.modbusaccess   = try   container.decode(ModbusAccess.self, forKey: .modbusaccess)
+        self.endianness     = try?  container.decode(ModbusDeviceEndianness.self, forKey: .endianness)
+
+        self.valuetype      = try   container.decode(ModbusValueType.self, forKey: .valuetype)
+        self.factor         = try?  container.decode(Decimal.self, forKey: .factor)
+        self.unit           = try?  container.decode(String.self, forKey: .unit)
+
+        self.mqtt           = try   container.decode(MQTTVisibilty.self, forKey: .mqtt)
+        self.publishalways  = try?  container.decode(Bool.self, forKey: .publishalways)
+        self.interval       = try   container.decode(Double.self, forKey: .interval)
+        self.topic          = try   container.decode(String.self, forKey: .topic)
+        self.title          = try   container.decode(String.self, forKey: .title)
+
+        self.nextReadDate   = try?  container.decode(Date.self, forKey: .nextReadDate)
+
+        JLog.debug("decoded: \(self)")
+    }
+}
+
 
 
 extension ModbusDefinition

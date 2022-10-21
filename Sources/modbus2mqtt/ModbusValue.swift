@@ -5,15 +5,6 @@
 import Foundation
 import JLog
 
-public struct ModbusValue:Equatable
-{
-    let address:Int
-    let value:ModbusType
-
-    public var includeTopicInJSON           = false
-    public var topic:String                 { ModbusDefinition.modbusDefinitions[address]?.topic   ?? "address/\(address)" }
-    public var mqttVisibility:MQTTVisibilty { ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible }
-}
 
 public enum ModbusType:Equatable
 {
@@ -31,6 +22,20 @@ public enum ModbusType:Equatable
     case string(String)
 }
 extension ModbusType:Decodable {}
+
+
+public struct ModbusValue:Equatable
+{
+    let address:Int
+    let value:ModbusType
+}
+
+extension ModbusValue
+{
+    public var topic:String                 { ModbusDefinition.modbusDefinitions[address]?.topic   ?? "address/\(address)" }
+    public var mqttVisibility:MQTTVisibilty { ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible }
+}
+
 
 extension ModbusValue:Encodable
 {
@@ -63,11 +68,6 @@ extension ModbusValue:Encodable
             try container.encode(mbd.unit    ,forKey:.unit)
         }
         try container.encode(mbd.title   ,forKey:.title)
-
-        if includeTopicInJSON
-        {
-            try container.encode(mbd.topic   ,forKey:.topic)
-        }
 
         switch value
         {

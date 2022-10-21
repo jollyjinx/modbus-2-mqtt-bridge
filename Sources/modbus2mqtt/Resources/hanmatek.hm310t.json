@@ -5,19 +5,19 @@
     "modbusaccess": "readwrite",
     "valuetype": "uint16",
     "mqtt": "visible",
-    "interval": 1,
+    "interval": 3,
     "topic": "status/output",
     "title": "Output Status"
   },
   {
     "address": 2,
     "modbustype": "holding",
-    "modbusaccess": "readwrite",
+    "modbusaccess": "read",
     "valuetype": "uint16",
     "mqtt": "visible",
     "interval": 2,
-    "topic": "status/locked",
-    "title": "Keys Locked"
+    "topic": "status/protectionmask",
+    "title": "Protection Bitmask"
   },
   {
     "address": 3,
@@ -93,9 +93,9 @@
     "factor": 100,
     "unit": "V",
     "mqtt": "visible",
-    "interval": 5,
-    "topic": "overoutput/voltage",
-    "title": "Over Output Voltage"
+    "interval": 10,
+    "topic": "protection/voltage",
+    "title": "Over Voltage Protection"
   },
   {
     "address": 33,
@@ -105,9 +105,9 @@
     "factor": 1000,
     "unit": "A",
     "mqtt": "visible",
-    "interval": 5,
-    "topic": "overoutput/current",
-    "title": "Over Output Current"
+    "interval": 10,
+    "topic": "protection/current",
+    "title": "Over Current Protection"
   },
   {
     "address": 34,
@@ -117,9 +117,9 @@
     "factor": 1000000,
     "unit": "W",
     "mqtt": "visible",
-    "interval": 5,
-    "topic": "overoutput/power",
-    "title": "Over Output Power"
+    "interval": 10,
+    "topic": "protection/power",
+    "title": "Over Power Protection"
   },
   {
     "address": 48,
@@ -129,7 +129,7 @@
     "factor": 100,
     "unit": "V",
     "mqtt": "visible",
-    "interval": 1,
+    "interval": 5,
     "topic": "set/voltage",
     "title": "Set Voltage"
   },
@@ -141,12 +141,294 @@
     "factor": 1000,
     "unit": "A",
     "mqtt": "visible",
-    "interval": 1,
+    "interval": 5,
     "topic": "set/current",
     "title": "Set Current"
   },
   {
-    "address": 39321,
+    "address": 50,
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "current/timespan",
+    "title": "Current timespan"
+  },
+  {
+    "address": "0x1000",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m1/voltage",
+    "title": "Memory 1 Voltage"
+  },
+  {
+    "address": "0x1001",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m1/current",
+    "title": "Memory 1 Current"
+  },
+  {
+    "address": "0x1002",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m1/timespan",
+    "title": "Memory 1 timespan"
+  },
+  {
+    "address": "0x1003",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m1/liststatus",
+    "title": "Memory 1 list status"
+  },
+  {
+    "address": "0x1010",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m2/voltage",
+    "title": "Memory 2 Voltage"
+  },
+  {
+    "address": "0x1011",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m2/current",
+    "title": "Memory 2 Current"
+  },
+  {
+    "address": "0x1012",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m2/timespan",
+    "title": "Memory 2 timespan"
+  },
+  {
+    "address": "0x1013",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m2/liststatus",
+    "title": "Memory 2 list status"
+  },
+  {
+    "address": "0x1020",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m3/voltage",
+    "title": "Memory 3 Voltage"
+  },
+  {
+    "address": "0x1021",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m3/current",
+    "title": "Memory 3 Current"
+  },
+  {
+    "address": "0x1022",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m3/timespan",
+    "title": "Memory 3 timespan"
+  },
+  {
+    "address": "0x1023",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m3/liststatus",
+    "title": "Memory 3 list status"
+  },
+
+  {
+    "address": "0x1030",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m4/voltage",
+    "title": "Memory 4 Voltage"
+  },
+  {
+    "address": "0x1031",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m4/current",
+    "title": "Memory 4 Current"
+  },
+  {
+    "address": "0x1032",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m4/timespan",
+    "title": "Memory 4 timespan"
+  },
+  {
+    "address": "0x1033",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m4/liststatus",
+    "title": "Memory 4 list status"
+  },
+  {
+    "address": "0x1040",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m5/voltage",
+    "title": "Memory 5 Voltage"
+  },
+  {
+    "address": "0x1041",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m5/current",
+    "title": "Memory 5 Current"
+  },
+  {
+    "address": "0x1042",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m5/timespan",
+    "title": "Memory 5 timespan"
+  },
+  {
+    "address": "0x1043",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m5/liststatus",
+    "title": "Memory 5 list status"
+  },
+  {
+    "address": "0x1050",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 100,
+    "unit": "V",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m6/voltage",
+    "title": "Memory 6 Voltage"
+  },
+  {
+    "address": "0x1051",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "factor": 1000,
+    "unit": "A",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m6/current",
+    "title": "Memory 6 Current"
+  },
+  {
+    "address": "0x1052",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "unit": "s",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m6/timespan",
+    "title": "Memory 6 timespan"
+  },
+  {
+    "address": "0x1053",
+    "modbustype": "holding",
+    "modbusaccess": "readwrite",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 10,
+    "topic": "memory/m6/liststatus",
+    "title": "Memory 6 list status"
+  },
+  {
+    "address": "0xffff",
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "int16",
