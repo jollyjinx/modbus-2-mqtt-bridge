@@ -198,10 +198,15 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
 
                 do
                 {
-                    JLog.debug("known:\(knownRequests)")
-                    guard !knownRequests.contains(request)                  else { throw RequestError.requestAnswered }
-                    guard request.date.timeIntervalSinceNow > -requestTTL   else { throw RequestError.requestDateOutdated }
-                    guard request.date.timeIntervalSinceNow < requestTTL    else { throw RequestError.requestDateInFuture }
+                    let outdated        = Date.init(timeIntervalSinceNow: -requestTTL)
+                    let tofarinfuture   = Date.init(timeIntervalSinceNow: requestTTL)
+                    JLog.debug("Request from:\(request.date) Allowed range:\(outdated) - \(tofarinfuture)")
+
+                    guard request.date > outdated           else { throw RequestError.requestDateOutdated }
+                    guard request.date < tofarinfuture      else { throw RequestError.requestDateInFuture }
+                    guard !knownRequests.contains(request)  else { throw RequestError.requestAnswered }
+
+
                     guard let mbd = staticDefinitions.first(where:{ $0.topic == request.topic} ) else { throw RequestError.noTopicFound }
 
                     if mbd.modbusaccess == .read
@@ -235,7 +240,9 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
                     response = MQTTResponse(date:Date(),id:request.id,success: false,error:"\(error)")
                 }
 
-                knownRequests = knownRequests.filter({ $0.date.timeIntervalSinceNow < requestTTL })
+                let outdated        = Date.init(timeIntervalSinceNow: -requestTTL)
+
+                knownRequests = knownRequests.filter({ $0.date < outdated })
                 knownRequests.insert(request)
 
                 let topic = "\(mqttServer.topic)/response/\(request.id)"

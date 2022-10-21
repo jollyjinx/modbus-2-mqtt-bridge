@@ -58,9 +58,9 @@ To set the output voltage of the HM310T to 14.04 Volt you can send the following
 ```
 {
   "value": 14.04,
-  "date": "2022-10-20T16:07:46+00",
+  "date": "2022-10-21T08:43:22Z",
   "topic": "set/voltage",
-  "id": "D2129DBF-9F94-56D7-86BC-7A07152FF1D8"
+  "id": "D2129DBF-9F94-46D7-86BC-4A07152FF1D8"
 }
 ```
 
