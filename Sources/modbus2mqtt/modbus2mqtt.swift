@@ -272,7 +272,18 @@ func startServing(modbusDevice:ModbusDevice,mqttServer:JNXMQTTServer,options:mod
 
     while true
     {
-        let mbd = modbusDefinitions.values.min(by:{ $0.nextReadDate < $1.nextReadDate })! as ModbusDefinition
+        let now = Date()
+
+        let mbd = modbusDefinitions.values.min(by:
+            {
+                if $0.nextReadDate < now,
+                   $1.nextReadDate < now,       // both of them are ready
+                   $0.interval != $1.interval   // then interval is like priority
+                {
+                    return $0.interval < $1.interval
+                }
+                return $0.nextReadDate < $1.nextReadDate
+            })! as ModbusDefinition
 
         while( mbd.nextReadDate > Date() )
         {
