@@ -29,6 +29,12 @@ This will look like the following on MQTT Explorer:
 
 <img src="Images/mqtt-explorer.png" width="70%" alt="MQTT Explorer Screenshot"/>
 
+You can create your own docker container by using the following command:
+
+```
+    docker build . --file modbus2mqtt.product.dockerfile --tag modbus2mqtt
+    docker run --name modbus2mqtt modbus2mqtt --modbus-server lambda --device-description-file lambda.json --topic lambda
+```
 
 ## JSON Definition Files
 
