@@ -77,7 +77,8 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
     "topic": "ambient/operatingstate",
     "title": "Ambient Operating State"
   }
-}```
+}
+```
 
 Remark: Be aware that json does not support comments like in this example.
 
