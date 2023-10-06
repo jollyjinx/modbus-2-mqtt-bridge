@@ -1,6 +1,6 @@
-# modbus2mqtt - Generic Modbus 2 MQTT Bridge
+# modbus2mqtt - Bidirectional Modbus 2 MQTT Bridge
 
-**modbus2mqtt** allows you to have any modbus capable device (Ethernet/USB/Serial) being available in MQTT.
+**modbus2mqtt** is allows you to have any modbus capable device (Ethernet/USB/Serial) being available and manipulatable in MQTT.
 
 It comes with json definition files for:
 
