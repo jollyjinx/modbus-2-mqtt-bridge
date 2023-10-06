@@ -9,12 +9,12 @@ WORKDIR /modbus2mqtt
 ENV PATH "$PATH:/modbus2mqtt"
 RUN chmod -R ugo+rwX /modbus2mqtt
 COPY --from=builder /swift/.build/release/modbus2mqtt .
-COPY --from=builder /swift/.build/release/modbus2mqtt_modbus2mqttLibrary.resources ./modbus2mqtt_modbus2mqttLibrary.resources
+COPY --from=builder /swift/.build/release/modbus2mqtt_modbus2mqtt.resources ./modbus2mqtt_modbus2mqtt.resources
 CMD ["modbus2mqtt"]
 
 # create your own docker image:
 #
-# docker build . --file modbus2mqtt.product.dockerfile --tag sma2mqmodbus2mqtttt
+# docker build . --file modbus2mqtt.product.dockerfile --tag modbus2mqtt
 # docker run --name modbus2mqtt modbus2mqtt
 
 

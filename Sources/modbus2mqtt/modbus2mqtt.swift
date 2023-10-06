@@ -51,9 +51,6 @@ struct modbus2mqtt: AsyncParsableCommand
 {
     @Option(help: "Set the log level.") var logLevel: JLog.Level = defaultLoglevel
 
-    @Option(name: .shortAndLong, help: "optional debug output")
-    var debug: Int = 0
-
     @Option(name: .long, help: "MQTT Server hostname")
     var mqttServername: String = "mqtt"
 
@@ -101,11 +98,16 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Modbus Device Description file (JSON).")
     var deviceDescriptionFile = "sma.sunnyboy.json"
 
-    mutating func run() async throws
+    func run() async throws
     {
         JLog.loglevel = logLevel
         signal(SIGUSR1, SIG_IGN)
         signal(SIGUSR1, handleSIGUSR1)
+
+        if logLevel != defaultLoglevel
+        {
+            JLog.info("Loglevel: \(logLevel)")
+        }
 
         do
         {
@@ -324,28 +326,28 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                 case .bool: let value = try await modbusDevice.readInputBitsFrom(startAddress: mbd.address, count: 1, type: mbd.modbustype).first!
                     payload = ModbusValue(address: mbd.address, value: .bool(value))
 
-                case .uint8: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]).first!
+                case .uint8: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]).first!
                     payload = ModbusValue(address: mbd.address, value: .uint8(value))
 
-                case .int8: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int8]).first!
+                case .int8: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int8]).first!
                     payload = ModbusValue(address: mbd.address, value: .int8(value))
 
-                case .uint16: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]).first!
+                case .uint16: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]).first!
                     payload = ModbusValue(address: mbd.address, value: .uint16(value))
 
-                case .int16: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int16]).first!
+                case .int16: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int16]).first!
                     payload = ModbusValue(address: mbd.address, value: .int16(value))
 
-                case .uint32: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt32]).first!
+                case .uint32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt32]).first!
                     payload = ModbusValue(address: mbd.address, value: .uint32(value))
 
-                case .int32: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int32]).first!
+                case .int32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int32]).first!
                     payload = ModbusValue(address: mbd.address, value: .int32(value))
 
-                case .uint64: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt64]).first!
+                case .uint64: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt64]).first!
                     payload = ModbusValue(address: mbd.address, value: .uint64(value))
 
-                case .int64: let value = await try (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int64]).first!
+                case .int64: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int64]).first!
                     payload = ModbusValue(address: mbd.address, value: .int64(value))
 
                 case .string: let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian)
@@ -426,11 +428,16 @@ func fileURLFromPath(path: String) throws -> URL
         return fileURL
     }
 
-    let filename = fileURL.deletingPathExtension().lastPathComponent
+    let resourceURL = URL(fileURLWithPath:"Resources/" + path)
+    let filename = resourceURL.deletingPathExtension().lastPathComponent
     let `extension` = fileURL.pathExtension
+
+
+
     JLog.debug("filename:\(filename) extension:\(`extension`)")
 
-    if let bundleURL = Bundle.module.url(forResource: "Resources/" + filename, withExtension: `extension`)
+
+    if let bundleURL = Bundle.module.url(forResource: filename, withExtension: `extension`)
     {
         return bundleURL
     }

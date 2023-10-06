@@ -18,7 +18,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "master"),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.2")),
-        .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.6.0"),
+        .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.8.0"),
         .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.5")),
         .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0"),
     ],

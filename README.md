@@ -7,10 +7,11 @@ It works on standard swift platforms. I works on macOS and Linux computers (e.g 
 ## Have any Modbus device brigded to MQTT 
 
 It comes with json definition files for:
-    - SMA sunnyboy inverters
-    - SMA sunnystore inverters
+    - Lambda EU-L series heatpumps
     - Phoenix Contact electric vehicle chargecontroller
     - Hanmatek HM310T laboratory power supply
+    - SMA sunnyboy inverters
+    - SMA sunnystore inverters
 
 It's easy to setup your own modbus2mqtt definition file. A json definition file looks like this:
 
@@ -64,7 +65,7 @@ To set the output voltage of the HM310T to 14.04 Volt you can send the following
 }
 ```
 
-to the topic *hm310/request/jollysrequest* of the MQTT server. The bridge will pickup the request and return the response to the response topic *hm310/response/D2129DBF-9F94-56D7-86BC-7A07152FF1D8* .
+to the topic *hm310/request/myrequestname* of the MQTT server. The bridge will pickup the request and return the response to the response topic *hm310/response/D2129DBF-9F94-56D7-86BC-7A07152FF1D8* .
 
 In swift Request/Responses are defined as follows.
 
