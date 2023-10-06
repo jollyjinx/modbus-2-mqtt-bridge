@@ -1,26 +1,29 @@
-# modbus2mqtt Bridge
+# modbus2mqtt - Generic Modbus 2 MQTT Bridge
 
-*modbus2mqtt* allows you to have modbus capable devices (Ethernet/USB/Serial) being available in MQTT.
- 
-It works on standard swift platforms. I works on macOS and Linux computers (e.g raspberry pi), but should work on swift for windows as well.
-
-## Have any Modbus device brigded to MQTT 
+**modbus2mqtt** allows you to have any modbus capable device (Ethernet/USB/Serial) being available in MQTT.
 
 It comes with json definition files for:
-    - Lambda Eureka series heatpumps (EU8L, EU13L EU15L)
-    - Phoenix Contact electric vehicle chargecontroller
-    - Hanmatek HM310T laboratory power supply
-    - SMA sunnyboy inverters
-    - SMA sunnystore inverters
 
+ - Lambda Eureka series heatpumps (EU8L, EU13L EU15L)
+ - Phoenix Contact electric vehicle chargecontroller
+ - Hanmatek HM310T laboratory power supply
+ - SMA sunnyboy/-store inverters (left in here, even though [sma2mqtt](https://github.com/jollyjinx/sma2mqtt) is better for that use case)
+
+and you can easily add json definition files for your own devices.
 
 ## Docker Container Use
 
 A Docker image, specifically engineered for 64-bit ARM architecture, is available. This image is compatible with a range of devices, including the Raspberry Pi, Apple Silicon Macs, and other 64-bit ARM computers. It can be employed directly using the following command:
+
 ```
-docker run --name modbus2mqtt jollyjinx/modbus2mqtt:latest modbus2mqtt --modbus-server lambda --topic lambda --device-description-file lambda.json
+	docker run --name modbus2mqtt \
+		jollyjinx/modbus2mqtt:latest modbus2mqtt \
+		--modbus-server lambda \
+		--topic lambda \
+		--device-description-file lambda.json
 ```
-This runs the bridge for a lambda heatpump and output it to the mqtt server topic /lambda. If there is no mqtt server specified the server named 'mqtt' is used.
+
+This runs **modbus2mqtt** for a lambda heatpump and output the values to the mqtt server topic /lambda. If there is no mqtt server specified the server named *mqtt* is used.
 
 This will look like the following on MQTT Explorer:
 
@@ -29,7 +32,7 @@ This will look like the following on MQTT Explorer:
 
 ## JSON Definition Files
 
-It's easy to setup your own modbus2mqtt definition file. A json definition file looks like this:
+It's easy to setup your own **modbus2mqtt** definition file. A json definition file looks like this:
 
 ```
 {
@@ -51,23 +54,37 @@ It's easy to setup your own modbus2mqtt definition file. A json definition file 
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "uint32",  
-    "factor": 0.001,                     // factor to multiply by
+    "factor": 0.001,                    // factor to multiply by
     "unit": "kWh",                      // unit for gui
     "mqtt": "visible",
     "interval": 1000,
     "topic": "counter/totalusage",
     "title": "Total Yield"
   },
-
-}
-```
+  {
+    "address": 1,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 5,
+    "map": {                            // you can add mappings for values
+        "0": "OFF",
+        "1": "AUTOMATIK",
+        "2": "MANUAL",
+        "3": "ERROR"
+    },
+    "topic": "ambient/operatingstate",
+    "title": "Ambient Operating State"
+  }
+}```
 
 Remark: Be aware that json does not support comments like in this example.
 
 
 ## Bridge goes both ways
 
-*modbus2mqtt* is a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
+**modbus2mqtt** is a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
 It uses a Request/Response pattern. You send a mqtt request to the mqtt request topic and are give the result of the request in the response topic path.
 
 To set the output voltage of the HM310T to 14.04 Volt you can send the following json 
