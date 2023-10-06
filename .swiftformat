@@ -1,0 +1,13 @@
+--header "\n {file}\n"
+--swiftversion 5.8
+--indentcase true
+#--maxwidth none
+--allman true
+--yodaswap always
+--wrapparameters after-first
+--wraparguments after-first
+--trimwhitespace always
+--self remove
+--wrapenumcases always
+--enable wrapMultilineStatementBraces
+

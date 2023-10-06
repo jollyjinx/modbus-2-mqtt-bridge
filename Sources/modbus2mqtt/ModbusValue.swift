@@ -1,12 +1,11 @@
 //
-//  Created by Patrick Stein on 18.03.22.
+//  ModbusValue.swift
 //
 
 import Foundation
 import JLog
 
-
-public enum ModbusType:Equatable
+public enum ModbusType: Equatable
 {
     case bool(Bool)
 
@@ -21,28 +20,48 @@ public enum ModbusType:Equatable
 
     case string(String)
 }
-extension ModbusType:Decodable {}
 
+extension ModbusType: Decodable {}
 
-public struct ModbusValue:Equatable
+public struct ModbusValue: Equatable
 {
-    let address:Int
-    let value:ModbusType
+    let address: Int
+    let value: ModbusType
 }
 
-extension ModbusValue
+public extension ModbusValue
 {
-    public var topic:String                 { ModbusDefinition.modbusDefinitions[address]?.topic   ?? "address/\(address)" }
-    public var mqttVisibility:MQTTVisibilty { ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible }
+    var topic: String { ModbusDefinition.modbusDefinitions[address]?.topic ?? "address/\(address)" }
+    var mqttVisibility: MQTTVisibilty { ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible }
+    var stringValue: String
+    {
+        switch value
+        {
+            case let .bool(value): return String(value)
+
+            case let .uint8(value): return String(value)
+            case let .int8(value): return String(value)
+
+            case let .uint16(value): return String(value)
+            case let .int16(value): return String(value)
+
+            case let .uint32(value): return String(value)
+
+            case let .int32(value): return String(value)
+
+            case let .uint64(value): return String(value)
+            case let .int64(value): return String(value)
+            case let .string(value): return String(value)
+        }
+    }
 }
 
-
-extension ModbusValue:Encodable
+extension ModbusValue: Encodable
 {
-    public var json:String
+    public var json: String
     {
         let jsonEncoder = JSONEncoder()
-            jsonEncoder.outputFormatting = .sortedKeys
+        jsonEncoder.outputFormatting = .sortedKeys
         let jsonData = try! jsonEncoder.encode(self)
         return String(data: jsonData, encoding: .utf8)!
     }
@@ -54,70 +73,100 @@ extension ModbusValue:Encodable
         enum CodingKeys: String, CodingKey
         {
             case address,
-            unit,
-            title,
-            value,
-            topic
+                 unit,
+                 title,
+                 value,
+                 topic
         }
-        var container = encoder.container(keyedBy:CodingKeys.self)
+        var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(mbd.address ,forKey:.address)
-        
+        try container.encode(mbd.address, forKey: .address)
+
         if mbd.unit != nil
         {
-            try container.encode(mbd.unit    ,forKey:.unit)
+            try container.encode(mbd.unit, forKey: .unit)
         }
-        try container.encode(mbd.title   ,forKey:.title)
+        try container.encode(mbd.title, forKey: .title)
 
-        switch value
+        if let map = mbd.map
         {
-            case .bool(let value):      try container.encode(value,forKey:.value)
+            let string = map[stringValue] ?? stringValue
+            try container.encode(string, forKey: .value)
+        }
+        else
+        {
+            switch value
+            {
+                case let .bool(value): try container.encode(value, forKey: .value)
 
-            case .uint8(let value):    try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-            case .int8(let value):     try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-            
-            case .uint16(let value):    try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-            case .int16(let value):     try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
+                case let .uint8(value): try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                case let .int8(value): try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
 
-            case .uint32(let value):    if value == UInt32.max
-                                        {
-                                            let string:String? = nil
-                                            try container.encode(string ,forKey:.value)
-                                        }
-                                        else
-                                        {
-                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-                                        }
-            case .int32(let value):     if value == Int32.min
-                                        {
-                                            let string:String? = nil
-                                            try container.encode(string ,forKey:.value)
-                                        }
-                                        else
-                                        {
-                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-                                        }
+                case let .uint16(value):
+                    if value == UInt16.max
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
 
+                case let .int16(value):
+                    if value == Int16.min
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
 
-            case .uint64(let value):    if value == UInt64.max
-                                        {
-                                            let string:String? = nil
-                                            try container.encode(string ,forKey:.value)
-                                        }
-                                        else
-                                        {
-                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-                                        }
-            case .int64(let value):     if value == Int64.min
-                                        {
-                                            let string:String? = nil
-                                            try container.encode(string ,forKey:.value)
-                                        }
-                                        else
-                                        {
-                                            try container.encode( mbd.hasFactor ? Decimal(value) / mbd.factor! : Decimal(value),forKey:.value)
-                                        }
-            case .string(let value):    try container.encode(value,forKey:.value)
+                case let .uint32(value):
+                    if value == UInt32.max
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
+                case let .int32(value):
+                    if value == Int32.min
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
+
+                case let .uint64(value):
+                    if value == UInt64.max
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
+                case let .int64(value):
+                    if value == Int64.min
+                    {
+                        let string: String? = nil
+                        try container.encode(string, forKey: .value)
+                    }
+                    else
+                    {
+                        try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
+                    }
+                case let .string(value): try container.encode(value, forKey: .value)
+            }
         }
     }
 }

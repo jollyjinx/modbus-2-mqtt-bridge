@@ -16,16 +16,13 @@ let package = Package(
         .executable(name: "modbus2mqtt", targets: ["modbus2mqtt"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from:"1.1.0" ), // revision:"3cad8ef"), // : "1.0.3"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "master"),
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.2")),
         .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.6.0"),
-        .package(url: "https://github.com/jollyjinx/JLog", from:"0.0.4"),
-        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0-beta5"),
-//        .package(path: "/Users/jolly/Documents/GitHub/SwiftLibModbus")
-//        .package(path: "/home/swift/SwiftLibModbus")
+        .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.5")),
+        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .executableTarget(
             name: "modbus2mqtt",
             dependencies: [

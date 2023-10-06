@@ -34,7 +34,7 @@ It's easy to setup your own modbus2mqtt definition file. A json definition file 
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "uint32",  
-    "factor": 1000,                     // factor to divide by
+    "factor": 0.001,                     // factor to multiply by
     "unit": "kWh",                      // unit for gui
     "mqtt": "visible",
     "interval": 1000,
