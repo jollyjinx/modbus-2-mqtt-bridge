@@ -32,7 +32,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 30,
         "unit": "ºC",
         "topic": "ambient/temperature",
         "title": "Ambient Temperature"
@@ -58,7 +58,7 @@
         "mqtt": "visible",
         "interval": 60,
         "unit": "ºC",
-        "topic": "ambient/temperature1h",
+        "topic": "ambient/temperature1d",
         "title": "Ambient Temperature 1d"
     },
     {
@@ -94,7 +94,7 @@
         "modbusaccess": "readwrite",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 1,
+        "interval": 2,
         "unit": "W",
         "topic": "e-manager/gridpower",
         "title": "E-Manager Grid Power"
@@ -105,7 +105,7 @@
         "modbusaccess": "read",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 1,
+        "interval": 2,
         "unit": "W",
         "topic": "e-manager/consumption",
         "title": "E-Manager Consumption"
@@ -405,7 +405,7 @@
         "valuetype": "int32",
         "factor": 0.001,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 20,
         "unit": "kWh",
         "topic": "heatpump/electricenergy",
         "title": "Heatpump Sum E-Energy"
@@ -417,7 +417,7 @@
         "valuetype": "int32",
         "factor": 0.001,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 20,
         "unit": "kWh",
         "topic": "heatpump/thermalenergy",
         "title": "Heatpump Sum T-Energy"
@@ -428,7 +428,7 @@
         "modbusaccess": "readwrite",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "topic": "heatpump/reseterrors",
         "title": "Heatpump Reset Errors"
     },
@@ -474,7 +474,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "boiler/hightemperature",
         "title": "Boiler High Temperature"
@@ -486,7 +486,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "boiler/lowtemperature",
         "title": "Boiler Low Temperature"
@@ -498,7 +498,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "boiler/settemperature",
         "title": "Boiler Set Temperature"
@@ -542,7 +542,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "buffer/hightemperature",
         "title": "Buffer High Temperature"
@@ -554,7 +554,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "buffer/lowtemperature",
         "title": "Buffer Low Temperature"
@@ -566,7 +566,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "buffer/settemperature",
         "title": "Buffer Set Temperature"
@@ -621,7 +621,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "invisible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/flowintemperature",
         "title": "Heating Flow In Temperature"
@@ -633,7 +633,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "invisible",
-        "interval": 20,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/flowouttemperature",
         "title": "Heating Flow Out Temperature"
@@ -645,7 +645,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/roomtemperature",
         "title": "Heating Room Temperature"
@@ -657,7 +657,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/setflowintemperature",
         "title": "Heating Set Flow In Temperature"
@@ -689,7 +689,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/setflowlineoffset",
         "title": "Heating Set Room Temperature"
@@ -701,7 +701,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/setroomheatingtemperature",
         "title": "Heating Set Room Heating Temperature"
@@ -713,7 +713,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 60,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heating/setroomcoolingtemperature",
         "title": "Heating Set Cooling Room Temperature"
