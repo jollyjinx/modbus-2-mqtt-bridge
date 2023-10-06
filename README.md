@@ -87,7 +87,7 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
 ```
 
 Remark: Be aware that json does not support comments like in this example.
-
+After creating your own json definition, you can use it with the commandline option *--device-description-file yourfilename* 
 
 ## Bridge goes both ways
 
