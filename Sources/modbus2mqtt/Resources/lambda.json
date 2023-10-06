@@ -295,7 +295,7 @@
         "modbustype": "holding",
         "modbusaccess": "read",
         "valuetype": "int16",
-        "factor": 0.01,
+        "factor": 0.1,
         "mqtt": "visible",
         "interval": 5,
         "unit": "kW",
