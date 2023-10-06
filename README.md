@@ -7,11 +7,27 @@ It works on standard swift platforms. I works on macOS and Linux computers (e.g 
 ## Have any Modbus device brigded to MQTT 
 
 It comes with json definition files for:
-    - Lambda EU-L series heatpumps
+    - Lambda Eureka series heatpumps (EU8L, EU13L EU15L)
     - Phoenix Contact electric vehicle chargecontroller
     - Hanmatek HM310T laboratory power supply
     - SMA sunnyboy inverters
     - SMA sunnystore inverters
+
+
+## Docker Container Use
+
+A Docker image, specifically engineered for 64-bit ARM architecture, is available. This image is compatible with a range of devices, including the Raspberry Pi, Apple Silicon Macs, and other 64-bit ARM computers. It can be employed directly using the following command:
+```
+docker run --name modbus2mqtt jollyjinx/modbus2mqtt:latest modbus2mqtt --modbus-server lambda --topic lambda --device-description-file lambda.json
+```
+This runs the bridge for a lambda heatpump and output it to the mqtt server topic /lambda. If there is no mqtt server specified the server named 'mqtt' is used.
+
+This will look like the following on MQTT Explorer:
+
+<img src="Images/mqtt-explorer.png" width="70%" alt="MQTT Explorer Screenshot"/>
+
+
+## JSON Definition Files
 
 It's easy to setup your own modbus2mqtt definition file. A json definition file looks like this:
 
@@ -104,36 +120,42 @@ Starting the application
 It supports command line help:
 
 ```
-> ./.build/debug/modbus2mqtt --help 
+> ./.build/release/modbus2mqtt --help 
 USAGE: modbus2mqtt <options>
 
 OPTIONS:
-  -d, --debug <debug>     optional debug output (default: 0)
-  --mqtt-server <mqtt-server>
+  --log-level <log-level> Set the log level. (default: notice)
+  --mqtt-servername <mqtt-servername>
                           MQTT Server hostname (default: mqtt)
   --mqtt-port <mqtt-port> MQTT Server port (default: 1883)
   --mqtt-username <mqtt-username>
                           MQTT Server username
   --mqtt-password <mqtt-password>
                           MQTT Server password
-  --interval <interval>   Minimum interval to send updates to mqtt Server. (default: 0.1)
+  --emit-interval <emit-interval>
+                          Minimum interval to send updates to mqtt Server.
+                          (default: 0.1)
   -t, --topic <topic>     MQTT Server topic. (default: modbus/sunnyboy)
   --mqtt-request-ttl <mqtt-request-ttl>
-                          Maximum time a mqttRequest can lie in the future/past to be accepted. (default: 1000.0)
+                          Maximum time a mqttRequest can lie in the future/past
+                          to be accepted. (default: 10.0)
   --mqtt-auto-retain-time <mqtt-auto-retain-time>
-                          If mqttTopic has a refreshtime larger than this value it will be ratained. (default: 10.0)
+                          If mqttTopic has a refreshtime larger than this value
+                          it will be ratained. (default: 10.0)
   --modbus-device-path <modbus-device-path>
                           Serial Modbus Device path
   --modbus-serial-speed <modbus-serial-speed>
                           Serial Modbus Speed (default: 9600)
   -m, --modbus-server <modbus-server>
-                          Modbus Device Servername. (default: modbus.example.com)
+                          Modbus Device Servername. (default:
+                          modbus.example.com)
   --modbus-port <modbus-port>
                           Modbus Device Port number. (default: 502)
   --modbus-address <modbus-address>
                           Modbus Device Address. (default: 3)
   --device-description-file <device-description-file>
-                          Modbus Device Description file (JSON). (default: sma.sunnyboy.json)
+                          Modbus Device Description file (JSON). (default:
+                          sma.sunnyboy.json)
   -h, --help              Show help information.
 
 ```
