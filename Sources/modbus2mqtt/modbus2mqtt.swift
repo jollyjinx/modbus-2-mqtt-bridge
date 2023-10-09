@@ -179,6 +179,10 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
     {
         fatalError("Could not connect to mqtt server")
     }
+
+    let requestPath = "\(mqttServer.topic)/request"
+    let responsePath = "\(mqttServer.topic)/response"
+
     for modbusDefinition in modbusDefinitions.values
     {
         switch modbusDefinition.modbusaccess
@@ -186,7 +190,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
             case .read: break
 
             case .write: fallthrough
-            case .readwrite: let topic = "\(mqttServer.topic)/request/+"
+            case .readwrite: let topic = requestPath + "/#"
                 try await mqttClient.subscribe(to: topic)
         }
     }
@@ -200,6 +204,15 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
         for await message in mqttClient.messages
         {
             JLog.debug("Received: \(message) contentType:\(message.payload)")
+
+            var responseTopic = message.topic
+
+            if let range = responseTopic.range(of: requestPath)
+            {
+                responseTopic.replaceSubrange(range, with: responsePath)
+            }
+
+
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
 
@@ -246,11 +259,17 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                             try await modbusDevice.writeASCIIString(start: mbd.address, count: mbd.length!, string: value)
 
                         case let (.uint16, .decimal(value)): JLog.debug("decimal:\(value)")
-                            let factored = mbd.hasFactor ? value * mbd.factor! : value
+                            let factored = mbd.hasFactor ? value / mbd.factor! : value
                             JLog.debug("factored:\(factored)")
                             guard let intValue = UInt16(factored.description) else { throw RequestError.valueTypeConversionError }
                             JLog.debug("Intvalue:\(intValue)")
+                            try await modbusDevice.writeRegisters(to: mbd.address, arrayToWrite: [intValue], endianness: mbd.endianness ?? .bigEndian)
 
+                        case let (.int16, .decimal(value)): JLog.debug("decimal:\(value)")
+                            let factored = mbd.hasFactor ? value / mbd.factor! : value
+                            JLog.debug("factored:\(factored)")
+                            guard let intValue = Int16(factored.description) else { throw RequestError.valueTypeConversionError }
+                            JLog.debug("Intvalue:\(intValue)")
                             try await modbusDevice.writeRegisters(to: mbd.address, arrayToWrite: [intValue], endianness: mbd.endianness ?? .bigEndian)
 
                         default: throw RequestError.attributeTypeCurrentlyNotSupported
@@ -268,14 +287,14 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                 knownRequests = knownRequests.filter { $0.date < outdated }
                 knownRequests.insert(request)
 
-                let topic = "\(mqttServer.topic)/response/\(request.id)"
+//                let topic = "\(mqttServer.topic)/response/\(request.id)"
 
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.dateEncodingStrategy = .iso8601
                 if let jsonData = try? jsonEncoder.encode(response),
                    let jsonString = String(data: jsonData, encoding: .utf8)
                 {
-                    try await mqttClient.publish(MQTTMessage(topic: topic,
+                    try await mqttClient.publish(MQTTMessage(topic: responseTopic,
                                                              payload: jsonString,
                                                              retain: false)
                     )

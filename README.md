@@ -105,7 +105,8 @@ To set the output voltage of the HM310T to 14.04 Volt you can send the following
 }
 ```
 
-to the topic *hm310/request/myrequestname* of the MQTT server. The bridge will pickup the request and return the response to the response topic *hm310/response/D2129DBF-9F94-56D7-86BC-7A07152FF1D8* .
+to the topic *hm310/request/mychange* of the MQTT server. The bridge will pickup the request and return the response to the response topic *hm310/response/mychange* .
+Be aware that you set the value 14.04 which will be correctly converted to the (u)int16 value of the specific modbus address.
 
 In swift Request/Responses are defined as follows.
 

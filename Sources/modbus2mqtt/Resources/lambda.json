@@ -15,7 +15,7 @@
         "modbusaccess": "read",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "OFF",
             "1": "AUTOMATIK",
@@ -77,7 +77,7 @@
         "modbusaccess": "read",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "OFF",
             "1": "AUTOMATIK",
@@ -94,7 +94,7 @@
         "modbusaccess": "readwrite",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 2,
+        "interval": 10,
         "unit": "W",
         "topic": "e-manager/gridpower",
         "title": "E-Manager Grid Power"
@@ -105,7 +105,7 @@
         "modbusaccess": "read",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 2,
+        "interval": 10,
         "unit": "W",
         "topic": "e-manager/consumption",
         "title": "E-Manager Consumption"
@@ -116,7 +116,7 @@
         "modbusaccess": "read",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "W",
         "topic": "e-manager/setpoint",
         "title": "E-Manager Setpoint"
@@ -213,7 +213,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/lineintemp",
         "title": "Heatpump Line In"
@@ -225,7 +225,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/lineouttemp",
         "title": "Heatpump Line Out"
@@ -237,7 +237,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "l/min",
         "topic": "heatpump/heatsinkflow",
         "title": "Heatpump Heatsink"
@@ -249,7 +249,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/sourceintemp",
         "title": "Heatpump Source In"
@@ -261,7 +261,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/sourceouttemp",
         "title": "Heatpump Source Out"
@@ -273,7 +273,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "l/min",
         "topic": "heatpump/sourceflow",
         "title": "Heatpump Source Flow"
@@ -285,7 +285,7 @@
         "valuetype": "uint16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "%",
         "topic": "heatpump/compressor",
         "title": "Heatpump Compressor"
@@ -297,7 +297,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "kW",
         "topic": "heatpump/heatingpower",
         "title": "Heatpump Heating Power"
@@ -308,7 +308,7 @@
         "modbusaccess": "read",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "W",
         "topic": "heatpump/inverterpower",
         "title": "Heatpump Inverter Power"
@@ -320,7 +320,7 @@
         "valuetype": "int16",
         "factor": 0.01,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "%",
         "topic": "heatpump/cop",
         "title": "Heatpump COP"
@@ -331,7 +331,7 @@
         "modbusaccess": "readwrite",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 30,
+        "interval": 60,
         "topic": "heatpump/requestpassword",
         "title": "Heatpump Request Password"
     },
@@ -359,7 +359,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/requestflowin",
         "title": "Heatpump Request Flow In"
@@ -371,7 +371,7 @@
         "valuetype": "int16",
         "factor": 0.1,
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "unit": "ºC",
         "topic": "heatpump/requestflowout",
         "title": "Heatpump Request Flow Out"
@@ -448,7 +448,7 @@
         "modbusaccess": "read",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "STBY",
             "1": "DHW",
@@ -519,7 +519,7 @@
         "modbusaccess": "read",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "STBY",
             "1": "HEATING",
@@ -587,7 +587,7 @@
         "modbusaccess": "read",
         "valuetype": "uint16",
         "mqtt": "invisible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "HEATING",
             "1": "ECO",
@@ -668,7 +668,7 @@
         "modbusaccess": "readwrite",
         "valuetype": "uint16",
         "mqtt": "visible",
-        "interval": 5,
+        "interval": 10,
         "map": {
             "0": "OFF",
             "1": "MANUAL",
