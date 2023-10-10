@@ -308,7 +308,7 @@
         "modbusaccess": "read",
         "valuetype": "int16",
         "mqtt": "visible",
-        "interval": 10,
+        "interval": 2,
         "unit": "W",
         "topic": "heatpump/inverterpower",
         "title": "Heatpump Inverter Power"

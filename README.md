@@ -25,9 +25,9 @@ A Docker image, specifically engineered for 64-bit ARM architecture, is availabl
 
 This runs **modbus2mqtt** for a lambda heatpump and output the values to the mqtt server topic /lambda. If there is no mqtt server specified the server named *mqtt* is used.
 
-This will look like the following on MQTT Explorer:
+This will look like the following on *MQTT Explorer* or in *node-red*:
 
-<img src="Images/mqtt-explorer.png" width="70%" alt="MQTT Explorer Screenshot"/>
+<img src="Images/mqtt-explorer.png" width="70%" alt="MQTT Explorer Screenshot"/><img src="Images/lambda-node-red.png" width="20%" alt="MQTT Explorer Screenshot"/>
 
 You can create your own docker container by using the following command:
 
