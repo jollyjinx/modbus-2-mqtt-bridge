@@ -215,8 +215,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/lineintemp",
-        "title": "Heatpump Line In"
+        "topic": "heatpump/flowlinetemperature",
+        "title": "Heatpump Flow Line Temperature"
     },
     {
         "address": 1005,
@@ -227,8 +227,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/lineouttemp",
-        "title": "Heatpump Line Out"
+        "topic": "heatpump/returnlinetemperature",
+        "title": "Heatpump Return Line Temperature"
     },
     {
         "address": 1006,
@@ -251,8 +251,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/sourceintemp",
-        "title": "Heatpump Source In"
+        "topic": "heatpump/sourceintemperature",
+        "title": "Heatpump Source In Temperature"
     },
     {
         "address": 1008,
@@ -263,8 +263,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/sourceouttemp",
-        "title": "Heatpump Source Out"
+        "topic": "heatpump/sourceouttemperature",
+        "title": "Heatpump Source Out Temperature"
     },
     {
         "address": 1009,
@@ -361,8 +361,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/requestflowin",
-        "title": "Heatpump Request Flow In"
+        "topic": "heatpump/requestflowline",
+        "title": "Heatpump Request Flow Line"
     },
     {
         "address": 1017,
@@ -373,8 +373,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heatpump/requestflowout",
-        "title": "Heatpump Request Flow Out"
+        "topic": "heatpump/requestreturnline",
+        "title": "Heatpump Request Return Line"
     },
     {
         "address": 1018,
@@ -623,8 +623,8 @@
         "mqtt": "invisible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heating/flowintemperature",
-        "title": "Heating Flow In Temperature"
+        "topic": "heating/flowlinetemperature",
+        "title": "Heating Flow Line Temperature"
     },
     {
         "address": 5003,
@@ -635,8 +635,8 @@
         "mqtt": "invisible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heating/flowouttemperature",
-        "title": "Heating Flow Out Temperature"
+        "topic": "heating/returnlinetemperature",
+        "title": "Heating Return Line Temperature"
     },
     {
         "address": 5004,
@@ -659,8 +659,8 @@
         "mqtt": "visible",
         "interval": 10,
         "unit": "ºC",
-        "topic": "heating/setflowintemperature",
-        "title": "Heating Set Flow In Temperature"
+        "topic": "heating/setflowlinetemperature",
+        "title": "Heating Set Flow line Temperature"
     },
     {
         "address": 5006,
@@ -692,7 +692,7 @@
         "interval": 10,
         "unit": "ºC",
         "topic": "heating/setflowlineoffset",
-        "title": "Heating Set Room Temperature"
+        "title": "Heating Flow Line Offset"
     },
     {
         "address": 5051,
@@ -704,7 +704,7 @@
         "interval": 10,
         "unit": "ºC",
         "topic": "heating/setroomheatingtemperature",
-        "title": "Heating Set Room Heating Temperature"
+        "title": "Heating Set Heating Cooling Temperature"
     },
     {
         "address": 5052,
@@ -716,6 +716,6 @@
         "interval": 10,
         "unit": "ºC",
         "topic": "heating/setroomcoolingtemperature",
-        "title": "Heating Set Cooling Room Temperature"
+        "title": "Heating Set Room Cooling Temperature"
     }
 ]
