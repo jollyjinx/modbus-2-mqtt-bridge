@@ -183,17 +183,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
     let requestPath = "\(mqttServer.topic)/request"
     let responsePath = "\(mqttServer.topic)/response"
 
-    for modbusDefinition in modbusDefinitions.values
-    {
-        switch modbusDefinition.modbusaccess
-        {
-            case .read: break
-
-            case .write: fallthrough
-            case .readwrite: let topic = requestPath + "/#"
-                try await mqttClient.subscribe(to: topic)
-        }
-    }
+    try await mqttClient.subscribe(to: requestPath + "/#")
 
     let staticDefinitions = modbusDefinitions.values
     Task
@@ -392,6 +382,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                 modbusDefinitions.keys.forEach { address in modbusDefinitions[address]!.nextReadDate = .distantPast }
 
                 try await mqttClient.reconnect()
+                try await mqttClient.subscribe(to: requestPath + "/#")
 
                 guard mqttClient.isConnected
                 else
