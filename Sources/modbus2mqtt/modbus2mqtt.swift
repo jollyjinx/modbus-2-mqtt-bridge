@@ -281,6 +281,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
 
                 let jsonEncoder = JSONEncoder()
                 jsonEncoder.dateEncodingStrategy = .iso8601
+                jsonEncoder.outputFormatting = .sortedKeys
                 if let jsonData = try? jsonEncoder.encode(response),
                    let jsonString = String(data: jsonData, encoding: .utf8)
                 {
