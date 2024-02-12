@@ -207,7 +207,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
             decoder.dateDecodingStrategy = .iso8601
 
             if let data = message.payload.string?.data(using: .utf8),
-               let request = try? decoder.decode(MQTTRequest.self, from: data)
+               var request = try? decoder.decode(MQTTRequest.self, from: data)
             {
                 JLog.debug("Got Request:\(request)")
                 let response: MQTTResponse
@@ -239,6 +239,45 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                     {
                         throw RequestError.attributeNotWriteable
                     }
+
+
+                    switch (mbd.valuetype, request.value)
+                    {
+                        case let (.bool, .string(value)):   JLog.debug("Mapping \(request) to Bool")
+                                                            switch value.lowercased()
+                                                            {
+                                                                case "true":    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(true))
+                                                                case "false":   request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(false))
+                                                                default: throw RequestError.valueTypeConversionError
+                                                            }
+                                                            JLog.debug("mapped to: \(request)")
+
+                        case let (.uint16, .string(value)): fallthrough
+                        case let (.int16, .string(value)):  JLog.debug("Mapping \(request) to (U)Int16")
+                                                            if  let valueMap = mbd.map,
+                                                                let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
+                                                            {
+                                                                JLog.debug("Got mapvalue:\(value)")
+
+                                                                if let decimalValue = Decimal(string: value)
+                                                                {
+                                                                    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .decimal(decimalValue))
+                                                                    JLog.debug("mapped to: \(request)")
+                                                                }
+                                                                else
+                                                                {
+                                                                    throw RequestError.valueTypeConversionError
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                JLog.error("No map found for \(value) in \(mbd.map ?? [:])")
+                                                                throw RequestError.attributeTypeCurrentlyNotSupported
+                                                            }
+
+                        default: break
+                    }
+
                     switch (mbd.valuetype, request.value)
                     {
                         case let (.bool, .bool(value)): JLog.debug("bool:\(value)")
