@@ -16,7 +16,7 @@ let package = Package(
         .executable(name: "modbus2mqtt", targets: ["modbus2mqtt"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "master"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "main"),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.2")),
         .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.8.0"),
         .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.5")),
