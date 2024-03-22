@@ -142,13 +142,13 @@ extension ModbusDefinition
 
 private final class ModbusDefinitionStore : @unchecked Sendable
 {
-    private let lock = NSLock()
+    let userMutatingLock = DispatchQueue(label: "definitions.lock.queue." + UUID().uuidString)
     private var _modbusDefinitions: [Int: ModbusDefinition] = [:]
 
     var definitions: [Int: ModbusDefinition]
     {
-        get { lock.lock(); defer { lock.unlock() }; return _modbusDefinitions }
-        set { lock.lock(); defer { lock.unlock() };_modbusDefinitions = newValue }
+        get { userMutatingLock.sync { _modbusDefinitions } }
+        set { userMutatingLock.sync { _modbusDefinitions = newValue } }
     }
 
     init()
