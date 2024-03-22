@@ -2,7 +2,7 @@
 //  ModbusDefinition.swift
 //
 
-@preconcurrency import Foundation
+import Foundation
 import JLog
 import SwiftLibModbus
 
@@ -124,10 +124,35 @@ extension ModbusDefinition
         return returnValue
     }
 
-    static var modbusDefinitions: [Int: ModbusDefinition]!
+    private static let modbusDefinitionStore = ModbusDefinitionStore()
+
+   static var modbusDefinitions:[Int: ModbusDefinition]
+   {
+        get { modbusDefinitionStore.definitions }
+        set { modbusDefinitionStore.definitions = newValue }
+    }
+
 }
 
 extension ModbusDefinition
 {
     var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
+}
+
+
+private final class ModbusDefinitionStore : @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var _modbusDefinitions: [Int: ModbusDefinition] = [:]
+
+    var definitions: [Int: ModbusDefinition]
+    {
+        get { lock.lock(); defer { lock.unlock() }; return _modbusDefinitions }
+        set { lock.lock(); defer { lock.unlock() };_modbusDefinitions = newValue }
+    }
+
+    init()
+    {
+
+    }
 }

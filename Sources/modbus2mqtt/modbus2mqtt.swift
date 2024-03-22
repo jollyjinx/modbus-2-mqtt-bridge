@@ -98,6 +98,7 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Modbus Device Description file (JSON).")
     var deviceDescriptionFile = "sma.sunnyboy.json"
 
+    @MainActor
     func run() async throws
     {
         JLog.loglevel = logLevel
@@ -151,6 +152,7 @@ func handleSIGUSR1(signal: Int32)
     }
 }
 
+@MainActor
 func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)

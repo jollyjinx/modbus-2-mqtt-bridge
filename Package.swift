@@ -1,4 +1,4 @@
-// swift-tools-version: 5.6
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -20,7 +20,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.2")),
         .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.8.0"),
         .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.5")),
-        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.0"),
+        .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from:"2.0.2"),
     ],
     targets: [
         .executableTarget(
@@ -31,10 +31,13 @@ let package = Package(
                                 .product(name: "JLog", package: "JLog"),
                                 .product(name: "SwiftLibModbus", package: "SwiftLibModbus")
                         ],
-                        resources: [
-                            .copy("Resources/")
-                        ]
-            ),
+            resources: [
+                .copy("Resources/")
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
         .testTarget(
             name: "modbus2mqttTests",
             dependencies: ["modbus2mqtt"]),
