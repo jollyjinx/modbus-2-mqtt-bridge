@@ -32,7 +32,7 @@ let package = Package(
                                 .product(name: "SwiftLibModbus", package: "SwiftLibModbus")
                         ],
             resources: [
-                .copy("Resources/")
+                .copy("DeviceDefinitions/")
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")

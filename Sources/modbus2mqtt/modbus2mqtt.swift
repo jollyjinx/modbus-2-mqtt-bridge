@@ -480,19 +480,18 @@ func fileURLFromPath(path: String) throws -> URL
         return fileURL
     }
 
-    let resourceURL = URL(fileURLWithPath:"Resources/" + path)
-    let filename = resourceURL.deletingPathExtension().lastPathComponent
+    let filename = fileURL.deletingPathExtension().lastPathComponent
     let `extension` = fileURL.pathExtension
 
-
-
+    JLog.debug("Bundle.module:\(String(describing: Bundle.module.resourceURL))")
     JLog.debug("filename:\(filename) extension:\(`extension`)")
 
-
-    if let bundleURL = Bundle.module.url(forResource: filename, withExtension: `extension`)
+    if let bundleURL = Bundle.module.url(forResource:filename, withExtension: `extension` , subdirectory: "DeviceDefinitions")
     {
         return bundleURL
     }
+    JLog.error("file not found:\(path)")
+
     enum ValidationError: Error { case fileNotFound(String) }
     throw ValidationError.fileNotFound("\(path)")
 }

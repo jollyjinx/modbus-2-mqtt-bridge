@@ -49,4 +49,47 @@ final class modbus2mqttTests: XCTestCase
             }
         }
     }
+
+    func testBrokenJSONDefinition() async throws
+    {
+        let testJSON = """
+        [
+            {
+                "address": 0,
+                "modbustype": "holding",
+                "modbusaccess": "read",
+                "valuetype": "int16",
+                "mqtt": "visible",
+                "interval": 10,
+                "topic": "ambient/errornumber",
+                "title": "Ambient Error Number"
+            },
+            {
+                "address": 0,
+                "modbustype": "holding",
+                "modbusaccess": "read",
+                "valuetype": "int16",
+                "mqtt": "visible",
+                "interval": 10,
+                "topic": "ambient/errornumber",
+                "title": "Ambient Error Number"
+            }
+        ]
+        """
+
+        // write to a temporary file
+        let url = URL(fileURLWithPath: "/tmp/ModbusDefinitions.json" + UUID().uuidString)
+        try testJSON.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        do
+        {
+            let definitions = try ModbusDefinition.read(from: url)
+            XCTFail("Expected duplicateModbusAddressDefined error, got \(definitions)")
+        }
+        catch
+        {
+
+        }
+    }
 }

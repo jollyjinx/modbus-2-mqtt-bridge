@@ -112,13 +112,18 @@ extension ModbusDefinition: Decodable
 
 extension ModbusDefinition
 {
+    enum ModbusDefinitionError: Swift.Error
+    {
+        case duplicateModbusAddressDefined(ModbusDefinition, ModbusDefinition)
+    }
+
     static func read(from url: URL) throws -> [Int: ModbusDefinition]
     {
         let jsonData = try Data(contentsOf: url)
         var modbusDefinitions = try JSONDecoder().decode([ModbusDefinition].self, from: jsonData)
         modbusDefinitions = modbusDefinitions.map { var mbd = $0; mbd.nextReadDate = .distantPast; return mbd }
 
-        let returnValue = Dictionary(uniqueKeysWithValues: modbusDefinitions.map { ($0.address, $0) })
+        let returnValue = try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0,$1) })
 
         Self.modbusDefinitions = returnValue
         return returnValue
