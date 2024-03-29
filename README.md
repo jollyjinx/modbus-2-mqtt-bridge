@@ -8,7 +8,8 @@ It comes with json definition files for:
  - Phoenix Contact electric vehicle chargecontroller
  - Hanmatek HM310T laboratory power supply
  - SMA sunnyboy/-store inverters (left in here, even though [sma2mqtt](https://github.com/jollyjinx/sma2mqtt) is better for that use case)
-
+ - GoodWe ET 15-30 inverter
+ 
 and you can easily add json definition files for your own devices.
 
 ## Docker Container Use
