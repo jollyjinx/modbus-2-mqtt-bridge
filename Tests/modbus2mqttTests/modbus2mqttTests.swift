@@ -7,6 +7,32 @@ import XCTest
 
 @testable import modbus2mqtt
 
+public extension Encodable
+{
+    var json: String
+    {
+        let jsonEncoder = JSONEncoder()
+        jsonEncoder.outputFormatting = [.sortedKeys]
+        jsonEncoder.dateEncodingStrategy = .iso8601
+        jsonEncoder.outputFormatting = [.prettyPrinted]
+        let jsonData = try? jsonEncoder.encode(self)
+        return jsonData != nil ? String(data: jsonData!, encoding: .utf8) ?? "" : ""
+    }
+}
+
+extension Decodable
+{
+    public init(json:String) throws
+    {
+        print("Decodable:\(json)")
+        print("Self:\(Self.self)")
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let data = json.data(using: .utf8)!
+        self = try decoder.decode(Self.self, from: data)
+    }
+}
+
 final class modbus2mqttTests: XCTestCase
 {
     func testReverseEngineerHM310T() async throws
@@ -92,4 +118,45 @@ final class modbus2mqttTests: XCTestCase
 
         }
     }
+
+    func testBitMapValues() async throws
+    {
+        let testJSON = """
+        [
+            {
+                "address": 1,
+                "modbustype": "holding",
+                "modbusaccess": "read",
+                "valuetype": "int16",
+                "mqtt": "visible",
+                "interval": 10,
+                "topic": "ambient/errornumber",
+                "title": "Ambient Error Number",
+                "bitmapValues" : {
+                    "0-1": { "name" : "foo", "mqttPath" : "pathfoo" },
+                    "2-5": { "name" : "bar", "mqttPath" : "pathbar" },
+                    "6" :  { "name" : "baz", "mqttPath" : "pathbaz" }
+                }
+            }
+        ]
+        """
+
+        // write to a temporary file
+        let url = URL(fileURLWithPath: "/tmp/ModbusDefinitions.json" + UUID().uuidString)
+        try testJSON.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        do
+        {
+            let definitions = try ModbusDefinition.read(from: url)
+            print("definitions:\(definitions.json)")
+        }
+        catch
+        {
+            XCTFail("Expected decoding working got error:\(error)")
+        }
+    }
+
+
+
 }
