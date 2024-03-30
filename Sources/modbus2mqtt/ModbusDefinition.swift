@@ -51,7 +51,6 @@ struct ModbusDefinition: Encodable, Sendable
     let unit: String?
 
     let map: ValueMap?
-//    let bitmapValues: Dictionary<BitMapKey,BitMapInfo>?
     let bitmapValues: BitMapValues?
 
     let mqtt: MQTTVisibilty

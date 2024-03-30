@@ -3,7 +3,9 @@
 //
 
 import SwiftLibModbus
+import Foundation
 import XCTest
+import JLog
 
 @testable import modbus2mqtt
 
@@ -157,6 +159,47 @@ final class modbus2mqttTests: XCTestCase
         }
     }
 
+    func testDecodingInt8() async throws
+    {
+        let testJSON = """
+        [
+            {
+                "address": 1,
+                "modbustype": "holding",
+                "modbusaccess": "read",
+                "valuetype": "uint32",
+                "mqtt": "visible",
+                "interval": 10,
+                "topic": "ambient/errornumber",
+                "title": "Ambient Error Number",
+                "bitmapValues" : {
+                    "0-1": { "name" : "foo" },
+                    "2-5": { "name" : "bar" },
+                    "6" :  { "name" : "baz" }
+                }
+            }
+        ]
+        """
 
+        // write to a temporary file
+        let url = URL(fileURLWithPath: "/tmp/ModbusDefinitions.json" + UUID().uuidString)
+        try testJSON.write(to: url, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        do
+        {
+            let definitions = try ModbusDefinition.read(from: url)
+            print("definitions:\(definitions.json)")
+        }
+        catch
+        {
+            XCTFail("Expected decoding working got error:\(error)")
+        }
+
+        let modbusValue = ModbusValue(address: 1, value: .uint32(0b1111111))
+
+        JLog.debug("modbusValue:\(modbusValue.json)")
+
+    }
 
 }

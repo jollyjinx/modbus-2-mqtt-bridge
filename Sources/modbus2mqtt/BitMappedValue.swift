@@ -95,7 +95,6 @@ extension BitMapKey : Encodable
 struct BitMapInfo : Codable
 {
     let name:String
-    let mqttPath:String
 }
 
 struct BitMapValues
@@ -103,6 +102,41 @@ struct BitMapValues
     typealias BitMapValues = [BitMapKey:BitMapInfo]
 
     var values:BitMapValues
+
+    public enum BitMapValue: Encodable
+    {
+        case bool(Bool)
+        case uint64(UInt64)
+
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self
+            {
+                case .bool(let value): try container.encode(value)
+                case .uint64(let value): try container.encode(value)
+            }
+        }
+    }
+
+
+    func dictionary(for withValue: UInt64) -> [String:BitMapValue]
+    {
+        var bitmapDictionary = [String:BitMapValue]()
+
+        for value in values
+        {
+            let key = value.key
+            let info = value.value
+
+            let maskedValue = key.bits & withValue
+            let rightShift = UInt64(key.lowestBit)
+            let value = maskedValue >> rightShift
+
+
+            bitmapDictionary[info.name] = key.lowestBit == key.highestBit ? .bool(value != 0) : .uint64(value)
+        }
+        return bitmapDictionary
+    }
 }
 
 extension BitMapValues: Codable
