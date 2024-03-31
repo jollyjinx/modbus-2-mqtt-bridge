@@ -76,13 +76,28 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
     "mqtt": "visible",
     "interval": 5,
     "map": {                            // you can add mappings for values
-        "0": "OFF",
-        "1": "AUTOMATIK",
-        "2": "MANUAL",
-        "3": "ERROR"
+        "0": "OFF",                     // so value will be "AUTOMATIC" if the 
+        "1": "AUTOMATIK",               // raw value is 1
+        "2": "MANUAL",                  // original values can then be accessed with  
+        "3": "ERROR"                    // "rawValue" key in the output
     },
     "topic": "ambient/operatingstate",
     "title": "Ambient Operating State"
+  },
+  {
+    "address": 2,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "mqtt": "visible",
+    "interval": 5,
+    "bits": {                            // you can bit mappings for values
+        "0": { "name" : "running" },     // a single bit will be mapped to a boolean
+        "1-3": { "name" : "mode" },      // multiple values will be mapped to the integer number with those bits shifted to the right
+        "4-15": { "name" : "reserved" }  
+    },
+    "topic": "test/state",
+    "title": "Test State"
   }
 }
 ```
