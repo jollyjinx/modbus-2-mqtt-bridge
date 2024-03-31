@@ -128,7 +128,7 @@ extension ModbusDefinition
         var modbusDefinitions = try JSONDecoder().decode([ModbusDefinition].self, from: jsonData)
         modbusDefinitions = modbusDefinitions.map { var mbd = $0; mbd.nextReadDate = .distantPast; return mbd }
 
-        let returnValue = try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0,$1) })
+        let returnValue = try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
 
         Self.modbusDefinitions = returnValue
         return returnValue
@@ -136,12 +136,11 @@ extension ModbusDefinition
 
     private static let modbusDefinitionStore = ModbusDefinitionStore()
 
-   static var modbusDefinitions:[Int: ModbusDefinition]
-   {
+    static var modbusDefinitions: [Int: ModbusDefinition]
+    {
         get { modbusDefinitionStore.definitions }
         set { modbusDefinitionStore.definitions = newValue }
     }
-
 }
 
 extension ModbusDefinition
@@ -149,8 +148,7 @@ extension ModbusDefinition
     var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
 }
 
-
-private final class ModbusDefinitionStore : @unchecked Sendable
+private final class ModbusDefinitionStore: @unchecked Sendable
 {
     let userMutatingLock = DispatchQueue(label: "definitions.lock.queue." + UUID().uuidString)
     private var _modbusDefinitions: [Int: ModbusDefinition] = [:]
@@ -162,7 +160,5 @@ private final class ModbusDefinitionStore : @unchecked Sendable
     }
 
     init()
-    {
-
-    }
+    {}
 }

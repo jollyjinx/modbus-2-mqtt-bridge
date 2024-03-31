@@ -114,15 +114,13 @@ struct modbus2mqtt: AsyncParsableCommand
         {
             let mqttServer = JNXMQTTServer(server: JNXServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), emitInterval: emitInterval, topic: topic)
 
-            let modbusDevice: ModbusDevice
-
-            if modbusDevicePath.isEmpty
+            let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
             {
-                modbusDevice = try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
+                try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
             }
             else
             {
-                modbusDevice = try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
+                try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
             }
 
             try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, options: self)
@@ -160,16 +158,14 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
 
     JLog.debug("modbusdefinitions:\(modbusDefinitions)")
 
-    let credentials: MQTTConfiguration.Credentials?
-
-    if let username = mqttServer.server.username,
-       let password = mqttServer.server.password
+    let credentials: MQTTConfiguration.Credentials? = if let username = mqttServer.server.username,
+                                                         let password = mqttServer.server.password
     {
-        credentials = MQTTConfiguration.Credentials(username: username, password: password)
+        MQTTConfiguration.Credentials(username: username, password: password)
     }
     else
     {
-        credentials = nil
+        nil
     }
     let mqttClient = MQTTClient(configuration: .init(target: .host(mqttServer.server.hostname, port: Int(mqttServer.server.port)),
                                                      credentials: credentials),
@@ -203,7 +199,6 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
             {
                 responseTopic.replaceSubrange(range, with: responsePath)
             }
-
 
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
@@ -242,40 +237,39 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                         throw RequestError.attributeNotWriteable
                     }
 
-
                     switch (mbd.valuetype, request.value)
                     {
-                        case let (.bool, .string(value)):   JLog.debug("Mapping \(request) to Bool")
-                                                            switch value.lowercased()
-                                                            {
-                                                                case "true":    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(true))
-                                                                case "false":   request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(false))
-                                                                default: throw RequestError.valueTypeConversionError
-                                                            }
-                                                            JLog.debug("mapped to: \(request)")
+                        case let (.bool, .string(value)): JLog.debug("Mapping \(request) to Bool")
+                            switch value.lowercased()
+                            {
+                                case "true": request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(true))
+                                case "false": request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(false))
+                                default: throw RequestError.valueTypeConversionError
+                            }
+                            JLog.debug("mapped to: \(request)")
 
                         case let (.uint16, .string(value)): fallthrough
-                        case let (.int16, .string(value)):  JLog.debug("Mapping \(request) to (U)Int16")
-                                                            if  let valueMap = mbd.map,
-                                                                let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
-                                                            {
-                                                                JLog.debug("Got mapvalue:\(value)")
+                        case let (.int16, .string(value)): JLog.debug("Mapping \(request) to (U)Int16")
+                            if let valueMap = mbd.map,
+                               let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
+                            {
+                                JLog.debug("Got mapvalue:\(value)")
 
-                                                                if let decimalValue = Decimal(string: value)
-                                                                {
-                                                                    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .decimal(decimalValue))
-                                                                    JLog.debug("mapped to: \(request)")
-                                                                }
-                                                                else
-                                                                {
-                                                                    throw RequestError.valueTypeConversionError
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                JLog.error("No map found for \(value) in \(mbd.map ?? [:])")
-                                                                throw RequestError.attributeTypeCurrentlyNotSupported
-                                                            }
+                                if let decimalValue = Decimal(string: value)
+                                {
+                                    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .decimal(decimalValue))
+                                    JLog.debug("mapped to: \(request)")
+                                }
+                                else
+                                {
+                                    throw RequestError.valueTypeConversionError
+                                }
+                            }
+                            else
+                            {
+                                JLog.error("No map found for \(value) in \(mbd.map ?? [:])")
+                                throw RequestError.attributeTypeCurrentlyNotSupported
+                            }
 
                         default: break
                     }
@@ -486,7 +480,7 @@ func fileURLFromPath(path: String) throws -> URL
     JLog.debug("Bundle.module:\(String(describing: Bundle.module.resourceURL))")
     JLog.debug("filename:\(filename) extension:\(`extension`)")
 
-    if let bundleURL = Bundle.module.url(forResource:filename, withExtension: `extension` , subdirectory: "DeviceDefinitions")
+    if let bundleURL = Bundle.module.url(forResource: filename, withExtension: `extension`, subdirectory: "DeviceDefinitions")
     {
         return bundleURL
     }

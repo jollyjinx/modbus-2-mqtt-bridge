@@ -76,6 +76,7 @@ extension ModbusValue: Encodable
                  unit,
                  title,
                  value,
+                 rawValue,
                  topic,
                  bitmapValues
         }
@@ -93,6 +94,25 @@ extension ModbusValue: Encodable
         {
             let string = map[stringValue] ?? stringValue
             try container.encode(string, forKey: .value)
+
+            switch value
+            {
+                case let .bool(value): try container.encode(value, forKey: .rawValue)
+
+                case let .uint8(value): try container.encode(value, forKey: .rawValue)
+                case let .int8(value): try container.encode(value, forKey: .rawValue)
+
+                case let .uint16(value): try container.encode(value, forKey: .rawValue)
+                case let .int16(value): try container.encode(value, forKey: .rawValue)
+
+                case let .uint32(value): try container.encode(value, forKey: .rawValue)
+
+                case let .int32(value): try container.encode(value, forKey: .rawValue)
+
+                case let .uint64(value): try container.encode(value, forKey: .rawValue)
+                case let .int64(value): try container.encode(value, forKey: .rawValue)
+                case let .string(value): try container.encode(value, forKey: .rawValue)
+            }
         }
         else
         {
@@ -101,7 +121,7 @@ extension ModbusValue: Encodable
                 case let .bool(value): try container.encode(value, forKey: .value)
 
                 case let .uint8(value): try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
-                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value) )
+                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value))
                     {
                         try container.encode(dictionary, forKey: .bitmapValues)
                     }
@@ -118,7 +138,7 @@ extension ModbusValue: Encodable
                     {
                         try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
                     }
-                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value) )
+                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value))
                     {
                         try container.encode(dictionary, forKey: .bitmapValues)
                     }
@@ -144,7 +164,7 @@ extension ModbusValue: Encodable
                     {
                         try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
                     }
-                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value) )
+                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value))
                     {
                         try container.encode(dictionary, forKey: .bitmapValues)
                     }
@@ -170,7 +190,7 @@ extension ModbusValue: Encodable
                     {
                         try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
                     }
-                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value) )
+                    if let dictionary = mbd.bitmapValues?.dictionary(for: UInt64(value))
                     {
                         try container.encode(dictionary, forKey: .bitmapValues)
                     }

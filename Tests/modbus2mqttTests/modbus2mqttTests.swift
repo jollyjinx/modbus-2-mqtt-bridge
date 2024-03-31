@@ -2,10 +2,10 @@
 //  modbus2mqttTests.swift
 //
 
-import SwiftLibModbus
 import Foundation
-import XCTest
 import JLog
+import SwiftLibModbus
+import XCTest
 
 @testable import modbus2mqtt
 
@@ -22,9 +22,9 @@ public extension Encodable
     }
 }
 
-extension Decodable
+public extension Decodable
 {
-    public init(json:String) throws
+    init(json: String) throws
     {
         print("Decodable:\(json)")
         print("Self:\(Self.self)")
@@ -116,9 +116,7 @@ final class modbus2mqttTests: XCTestCase
             XCTFail("Expected duplicateModbusAddressDefined error, got \(definitions)")
         }
         catch
-        {
-
-        }
+        {}
     }
 
     func testBitMapValues() async throws
@@ -176,6 +174,10 @@ final class modbus2mqttTests: XCTestCase
                     "0-1": { "name" : "foo" },
                     "2-5": { "name" : "bar" },
                     "6" :  { "name" : "baz" }
+                },
+                "map" : {
+                    "0" : "bla",
+                    "127" : "foo"
                 }
             }
         ]
@@ -199,7 +201,5 @@ final class modbus2mqttTests: XCTestCase
         let modbusValue = ModbusValue(address: 1, value: .uint32(0b1111111))
 
         JLog.debug("modbusValue:\(modbusValue.json)")
-
     }
-
 }
