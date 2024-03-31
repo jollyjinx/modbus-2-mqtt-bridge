@@ -51,7 +51,7 @@ struct ModbusDefinition: Encodable, Sendable
     let unit: String?
 
     let map: ValueMap?
-    let bitmapValues: BitMapValues?
+    let bits: BitMapValues?
 
     let mqtt: MQTTVisibilty
     let publishalways: Bool?
@@ -66,7 +66,7 @@ extension ModbusDefinition: Decodable
 {
     enum CodingKeys: String, CodingKey
     {
-        case address, length, modbustype, modbusaccess, endianness, valuetype, factor, unit, map, bitmapValues, mqtt, publishalways, interval, topic, title, nextReadDate
+        case address, length, modbustype, modbusaccess, endianness, valuetype, factor, unit, map, bits, mqtt, publishalways, interval, topic, title, nextReadDate
     }
 
     public init(from decoder: Decoder) throws
@@ -101,7 +101,7 @@ extension ModbusDefinition: Decodable
         unit = try? container.decode(String.self, forKey: .unit)
         map = try? container.decode(ValueMap.self, forKey: .map)
 
-        bitmapValues = try? container.decode(BitMapValues.self, forKey: .bitmapValues)
+        bits = try? container.decode(BitMapValues.self, forKey: .bits)
 
         mqtt = try container.decode(MQTTVisibilty.self, forKey: .mqtt)
         publishalways = try? container.decode(Bool.self, forKey: .publishalways)

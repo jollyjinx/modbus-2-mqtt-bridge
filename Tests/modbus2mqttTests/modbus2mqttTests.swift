@@ -132,7 +132,7 @@ final class modbus2mqttTests: XCTestCase
                 "interval": 10,
                 "topic": "ambient/errornumber",
                 "title": "Ambient Error Number",
-                "bitmapValues" : {
+                "bits" : {
                     "0-1": { "name" : "foo", "mqttPath" : "pathfoo" },
                     "2-5": { "name" : "bar", "mqttPath" : "pathbar" },
                     "6" :  { "name" : "baz", "mqttPath" : "pathbaz" }
@@ -170,7 +170,7 @@ final class modbus2mqttTests: XCTestCase
                 "interval": 10,
                 "topic": "ambient/errornumber",
                 "title": "Ambient Error Number",
-                "bitmapValues" : {
+                "bits" : {
                     "0-1": { "name" : "foo" },
                     "2-5": { "name" : "bar" },
                     "6" :  { "name" : "baz" }
