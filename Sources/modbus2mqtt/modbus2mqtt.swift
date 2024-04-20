@@ -13,7 +13,6 @@ import JLog
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
-
 #if !NSEC_PER_SEC
     let NSEC_PER_SEC = 1_000_000_000
 #endif
@@ -278,7 +277,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: m
 
                         default: throw RequestError.attributeTypeCurrentlyNotSupported
                     }
-                    response = MQTTResponse(request: request,success: true)
+                    response = MQTTResponse(request: request, success: true)
                 }
                 catch
                 {

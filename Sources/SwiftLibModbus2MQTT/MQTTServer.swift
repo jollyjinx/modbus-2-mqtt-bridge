@@ -1,10 +1,6 @@
 //
-//  File.swift
-//  
+//  MQTTServer.swift
 //
-//  Created by Patrick Stein on 20.04.24.
-//
-
 
 public struct MQTTServer
 {
@@ -25,7 +21,7 @@ public struct MQTTServer
 public struct MQTTDevice
 {
     public let server: MQTTServer
-    public  let topic: String
+    public let topic: String
 
     public init(server: MQTTServer, topic: String)
     {

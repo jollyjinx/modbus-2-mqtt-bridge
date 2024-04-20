@@ -143,9 +143,9 @@ extension ModbusDefinition
     }
 }
 
-extension ModbusDefinition
+public extension ModbusDefinition
 {
-    public var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
+    var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
 }
 
 private final class ModbusDefinitionStore: @unchecked Sendable

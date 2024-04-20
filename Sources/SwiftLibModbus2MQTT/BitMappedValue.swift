@@ -99,7 +99,7 @@ public struct BitMapInfo: Codable, Sendable
     public let name: String
 }
 
-public struct BitMapValues : Sendable
+public struct BitMapValues: Sendable
 {
     public typealias BitMapValues = [BitMapKey: BitMapInfo]
 

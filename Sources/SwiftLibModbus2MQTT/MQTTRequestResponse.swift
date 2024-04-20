@@ -54,7 +54,7 @@ public struct MQTTRequest
     }
 }
 
-extension MQTTRequest:Codable {}
+extension MQTTRequest: Codable {}
 
 extension MQTTRequest: Equatable
 {
@@ -79,7 +79,8 @@ public struct MQTTResponse
     public let success: Bool
     public let error: String?
 
-    public init(date: Date = Date(), id: UUID, success: Bool, error: String?) {
+    public init(date: Date = Date(), id: UUID, success: Bool, error: String?)
+    {
         self.date = date
         self.id = id
         self.success = success
@@ -91,4 +92,5 @@ public struct MQTTResponse
         self.init(date: request.date, id: request.id, success: success, error: error)
     }
 }
+
 extension MQTTResponse: Codable {}

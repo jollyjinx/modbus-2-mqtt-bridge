@@ -28,7 +28,8 @@ public struct ModbusValue: Equatable
     public let address: Int
     public let value: ModbusType
 
-    public init(address: Int, value: ModbusType) {
+    public init(address: Int, value: ModbusType)
+    {
         self.address = address
         self.value = value
     }
