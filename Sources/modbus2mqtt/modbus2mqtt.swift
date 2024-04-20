@@ -13,28 +13,6 @@ import JLog
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
-struct JNXServer
-{
-    let hostname: String
-    let port: UInt16
-    let username: String?
-    let password: String?
-
-    init(hostname: String, port: UInt16, username: String? = nil, password: String? = nil)
-    {
-        self.hostname = hostname
-        self.port = port
-        self.username = username
-        self.password = password
-    }
-}
-
-struct JNXMQTTServer
-{
-    let server: JNXServer
-    let emitInterval: Double
-    let topic: String
-}
 
 #if !NSEC_PER_SEC
     let NSEC_PER_SEC = 1_000_000_000
@@ -113,7 +91,7 @@ struct modbus2mqtt: AsyncParsableCommand
 
         do
         {
-            let mqttServer = JNXMQTTServer(server: JNXServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), emitInterval: emitInterval, topic: topic)
+            let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
 
             let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
             {
@@ -152,7 +130,7 @@ func handleSIGUSR1(signal: Int32)
 }
 
 @MainActor
-func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options: modbus2mqtt) async throws
+func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
     var modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
@@ -300,12 +278,12 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
 
                         default: throw RequestError.attributeTypeCurrentlyNotSupported
                     }
-                    response = MQTTResponse(date: Date(), id: request.id, success: true, error: nil)
+                    response = MQTTResponse(request: request,success: true)
                 }
                 catch
                 {
                     JLog.error("Could not work on request: \(request) due to:\(error)")
-                    response = MQTTResponse(date: Date(), id: request.id, success: false, error: "\(error)")
+                    response = MQTTResponse(request: request, success: false, error: "\(error)")
                 }
 
                 let outdated = Date(timeIntervalSinceNow: -requestTTL)

@@ -45,7 +45,7 @@ public struct MQTTRequest
     public let topic: String
     public let value: MQTTCommandValue
 
-    public init(date: Date, id: UUID, topic: String, value: MQTTCommandValue)
+    public init(date: Date = Date(), id: UUID = UUID(), topic: String, value: MQTTCommandValue)
     {
         self.date = date
         self.id = id
@@ -79,11 +79,16 @@ public struct MQTTResponse
     public let success: Bool
     public let error: String?
 
-    public init(date: Date, id: UUID, success: Bool, error: String?) {
+    public init(date: Date = Date(), id: UUID, success: Bool, error: String?) {
         self.date = date
         self.id = id
         self.success = success
         self.error = error
+    }
+
+    public init(request: MQTTRequest, success: Bool, error: String? = nil)
+    {
+        self.init(date: request.date, id: request.id, success: success, error: error)
     }
 }
 extension MQTTResponse: Codable {}
