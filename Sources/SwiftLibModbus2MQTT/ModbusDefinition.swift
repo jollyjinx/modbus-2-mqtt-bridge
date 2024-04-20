@@ -11,18 +11,18 @@ public enum MQTTVisibilty: String, Encodable, Decodable, Sendable
     case invisible, visible, retained
 }
 
-typealias ValueMap = [String: String]
+public typealias ValueMap = [String: String]
 
-struct ModbusDefinition: Encodable, Sendable
+public struct ModbusDefinition: Encodable, Sendable
 {
-    enum ModbusAccess: String, Encodable, Decodable
+    public enum ModbusAccess: String, Encodable, Decodable, Sendable
     {
         case read
         case readwrite
         case write
     }
 
-    enum ModbusValueType: String, Encodable, Decodable
+    public enum ModbusValueType: String, Encodable, Decodable, Sendable
     {
         case bool
 
@@ -40,26 +40,26 @@ struct ModbusDefinition: Encodable, Sendable
         case macaddress
     }
 
-    let address: Int
-    let length: Int?
-    let modbustype: ModbusRegisterType
-    let modbusaccess: ModbusAccess
-    let endianness: ModbusDeviceEndianness?
+    public let address: Int
+    public let length: Int?
+    public let modbustype: ModbusRegisterType
+    public let modbusaccess: ModbusAccess
+    public let endianness: ModbusDeviceEndianness?
 
-    let valuetype: ModbusValueType
-    let factor: Decimal?
-    let unit: String?
+    public let valuetype: ModbusValueType
+    public let factor: Decimal?
+    public let unit: String?
 
-    let map: ValueMap?
-    let bits: BitMapValues?
+    public let map: ValueMap?
+    public let bits: BitMapValues?
 
-    let mqtt: MQTTVisibilty
-    let publishalways: Bool?
-    let interval: Double
-    let topic: String
-    let title: String
+    public let mqtt: MQTTVisibilty
+    public let publishalways: Bool?
+    public let interval: Double
+    public let topic: String
+    public let title: String
 
-    var nextReadDate: Date! = .distantPast
+    public var nextReadDate: Date! = .distantPast
 }
 
 extension ModbusDefinition: Decodable
@@ -122,7 +122,7 @@ extension ModbusDefinition
         case duplicateModbusAddressDefined(ModbusDefinition, ModbusDefinition)
     }
 
-    static func read(from url: URL) throws -> [Int: ModbusDefinition]
+    public static func read(from url: URL) throws -> [Int: ModbusDefinition]
     {
         let jsonData = try Data(contentsOf: url)
         var modbusDefinitions = try JSONDecoder().decode([ModbusDefinition].self, from: jsonData)
@@ -145,7 +145,7 @@ extension ModbusDefinition
 
 extension ModbusDefinition
 {
-    var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
+    public var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
 }
 
 private final class ModbusDefinitionStore: @unchecked Sendable

@@ -6,6 +6,7 @@ import Foundation
 import JLog
 import SwiftLibModbus
 import XCTest
+import SwiftLibModbus2MQTT
 
 @testable import modbus2mqtt
 

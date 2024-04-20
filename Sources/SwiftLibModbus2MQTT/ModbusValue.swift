@@ -25,8 +25,13 @@ extension ModbusType: Decodable {}
 
 public struct ModbusValue: Equatable
 {
-    let address: Int
-    let value: ModbusType
+    public let address: Int
+    public let value: ModbusType
+
+    public init(address: Int, value: ModbusType) {
+        self.address = address
+        self.value = value
+    }
 }
 
 public extension ModbusValue

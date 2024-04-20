@@ -6,17 +6,17 @@ import Foundation
 import JLog
 import RegexBuilder
 
-struct BitMapKey: Sendable, Hashable
+public struct BitMapKey: Sendable, Hashable
 {
-    let lowestBit: UInt8
-    let highestBit: UInt8
+    public let lowestBit: UInt8
+    public let highestBit: UInt8
 
-    let bits: UInt64
+    public let bits: UInt64
 }
 
 extension BitMapKey: Decodable
 {
-    enum BitMapKeyError: Error
+    public enum BitMapKeyError: Error
     {
         case readKey(String)
     }
@@ -80,7 +80,7 @@ extension BitMapKey: Decodable
 
 extension BitMapKey: Encodable
 {
-    func encode(to encoder: any Encoder) throws
+    public func encode(to encoder: any Encoder) throws
     {
         var container = encoder.singleValueContainer()
 
@@ -88,22 +88,22 @@ extension BitMapKey: Encodable
         try container.encode(string)
     }
 
-    var description: String
+    public var description: String
     {
         return lowestBit == highestBit ? String(lowestBit) : "\(lowestBit)-\(highestBit)"
     }
 }
 
-struct BitMapInfo: Codable
+public struct BitMapInfo: Codable, Sendable
 {
-    let name: String
+    public let name: String
 }
 
-struct BitMapValues
+public struct BitMapValues : Sendable
 {
-    typealias BitMapValues = [BitMapKey: BitMapInfo]
+    public typealias BitMapValues = [BitMapKey: BitMapInfo]
 
-    var values: BitMapValues
+    public var values: BitMapValues
 
     public enum BitMapValue: Encodable
     {
@@ -121,7 +121,7 @@ struct BitMapValues
         }
     }
 
-    func dictionary(for withValue: UInt64) -> [String: BitMapValue]
+    public func dictionary(for withValue: UInt64) -> [String: BitMapValue]
     {
         var bitmapDictionary = [String: BitMapValue]()
 
@@ -144,7 +144,7 @@ extension BitMapValues: Codable
 {
     typealias SimpleDictonary = [String: BitMapInfo]
 
-    init(from decoder: any Decoder) throws
+    public init(from decoder: any Decoder) throws
     {
         let container = try decoder.singleValueContainer()
 
@@ -158,7 +158,7 @@ extension BitMapValues: Codable
         values = Dictionary(uniqueKeysWithValues: tuples)
     }
 
-    func encode(to encoder: any Encoder) throws
+    public func encode(to encoder: any Encoder) throws
     {
         let tuples = values.map
         { (key: BitMapKey, value: BitMapInfo) in

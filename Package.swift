@@ -14,6 +14,7 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .executable(name: "modbus2mqtt", targets: ["modbus2mqtt"]),
+        .library(name: "SwiftLibModbus2MQTT",targets: ["SwiftLibModbus2MQTT"]),
     ],
     dependencies: [
         .package(url: "https://github.com/nicklockwood/SwiftFormat", branch: "main"),
@@ -26,14 +27,24 @@ let package = Package(
         .executableTarget(
             name: "modbus2mqtt",
             dependencies: [
+                                "SwiftLibModbus2MQTT",
                                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                                .product(name: "MQTTNIO", package: "mqtt-nio"),
-                                .product(name: "JLog", package: "JLog"),
-                                .product(name: "SwiftLibModbus", package: "SwiftLibModbus")
+                                .product(name: "JLog", package: "JLog")
                         ],
             resources: [
                 .copy("DeviceDefinitions/")
             ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
+        .target(
+            name: "SwiftLibModbus2MQTT",
+            dependencies: [
+                                .product(name: "MQTTNIO", package: "mqtt-nio"),
+                                .product(name: "JLog", package: "JLog"),
+                                .product(name: "SwiftLibModbus", package: "SwiftLibModbus"),
+                        ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]

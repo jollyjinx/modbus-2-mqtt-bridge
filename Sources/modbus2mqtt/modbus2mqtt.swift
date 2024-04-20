@@ -11,6 +11,7 @@ import NIO
 
 import JLog
 import SwiftLibModbus
+import SwiftLibModbus2MQTT
 
 struct JNXServer
 {
