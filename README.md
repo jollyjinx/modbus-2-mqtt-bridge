@@ -182,7 +182,7 @@ OPTIONS:
                           to be accepted. (default: 10.0)
   --mqtt-auto-retain-time <mqtt-auto-retain-time>
                           If mqttTopic has a refreshtime larger than this value
-                          it will be ratained. (default: 10.0)
+                          it will be retained. (default: 10.0)
   --modbus-device-path <modbus-device-path>
                           Serial Modbus Device path
   --modbus-serial-speed <modbus-serial-speed>
