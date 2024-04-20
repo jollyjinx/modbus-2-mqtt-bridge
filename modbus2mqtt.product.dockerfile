@@ -20,7 +20,8 @@ CMD ["modbus2mqtt"]
 
 # following lines are for publishing on docker hub
 #
+# version=2.2.0
 # docker build . --file modbus2mqtt.product.dockerfile --tag jollyjinx/modbus2mqtt:development && docker push jollyjinx/modbus2mqtt:development
-# docker tag jollyjinx/modbus2mqtt:development jollyjinx/modbus2mqtt:2.1.4-beta1  && docker push jollyjinx/modbus2mqtt:2.1.4-beta1
-# docker tag jollyjinx/sma2mqtt:development jollyjinx/sma2mqtt:latest  && docker push jollyjinx/modbus2mqtt:latest
+# docker tag jollyjinx/modbus2mqtt:development jollyjinx/modbus2mqtt:$version  && docker push jollyjinx/modbus2mqtt:$version
+# docker tag jollyjinx/modbus2mqtt:$version jollyjinx/modbus2mqtt:latest  && docker push jollyjinx/modbus2mqtt:latest
 
