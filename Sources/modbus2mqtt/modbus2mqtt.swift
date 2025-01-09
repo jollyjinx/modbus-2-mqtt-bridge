@@ -17,7 +17,7 @@ import SwiftLibModbus2MQTT
     let NSEC_PER_SEC = 1_000_000_000
 #endif
 
-extension JLog.Level: ExpressibleByArgument {}
+extension JLog.Level: @retroactive ExpressibleByArgument {}
 #if DEBUG
     let defaultLoglevel: JLog.Level = .debug
 #else
