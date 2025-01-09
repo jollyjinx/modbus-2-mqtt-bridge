@@ -33,9 +33,6 @@ let package = Package(
                         ],
             resources: [
                 .copy("DeviceDefinitions/")
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .target(
@@ -44,10 +41,7 @@ let package = Package(
                                 .product(name: "MQTTNIO", package: "mqtt-nio"),
                                 .product(name: "JLog", package: "JLog"),
                                 .product(name: "SwiftLibModbus", package: "SwiftLibModbus"),
-                        ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
-            ]
+                        ]
         ),
         .testTarget(
             name: "modbus2mqttTests",
