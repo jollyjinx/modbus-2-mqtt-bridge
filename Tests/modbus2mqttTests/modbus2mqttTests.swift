@@ -5,10 +5,9 @@
 import Foundation
 import JLog
 import SwiftLibModbus
-import XCTest
-import SwiftLibModbus2MQTT
+import Testing
 
-@testable import modbus2mqtt
+@testable import SwiftLibModbus2MQTT
 
 public extension Encodable
 {
@@ -36,9 +35,11 @@ public extension Decodable
     }
 }
 
-final class modbus2mqttTests: XCTestCase
+@Suite("Modbus Tests")
+struct modbus2mqttTests
 {
-    func testReverseEngineerHM310T() async throws
+    @Test(.disabled("Only works when attached"))
+    func reverseEngineerHM310T() async throws
     {
         // Prints out modbus address ranges and compares them to the last time
 
@@ -79,7 +80,8 @@ final class modbus2mqttTests: XCTestCase
         }
     }
 
-    func testBrokenJSONDefinition() async throws
+    @Test
+    func BrokenJSONDefinition() async throws
     {
         let testJSON = """
         [
@@ -111,16 +113,13 @@ final class modbus2mqttTests: XCTestCase
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        do
-        {
+	#expect(throws: (any Error).self) {
             let definitions = try ModbusDefinition.read(from: url)
-            XCTFail("Expected duplicateModbusAddressDefined error, got \(definitions)")
         }
-        catch
-        {}
     }
 
-    func testBitMapValues() async throws
+    @Test
+    func BitMapValues() async throws
     {
         let testJSON = """
         [
@@ -147,18 +146,12 @@ final class modbus2mqttTests: XCTestCase
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        do
-        {
-            let definitions = try ModbusDefinition.read(from: url)
-            print("definitions:\(definitions.json)")
-        }
-        catch
-        {
-            XCTFail("Expected decoding working got error:\(error)")
-        }
+        
+        let definitions = try ModbusDefinition.read(from: url)
     }
 
-    func testDecodingInt8() async throws
+    @Test
+    func DecodingInt8() async throws
     {
         let testJSON = """
         [
@@ -189,18 +182,9 @@ final class modbus2mqttTests: XCTestCase
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        do
-        {
-            let definitions = try ModbusDefinition.read(from: url)
-            print("definitions:\(definitions.json)")
-        }
-        catch
-        {
-            XCTFail("Expected decoding working got error:\(error)")
-        }
+        let definitions = try ModbusDefinition.read(from: url)
 
         let modbusValue = ModbusValue(address: 1, value: .uint32(0b1111111))
 
-        JLog.debug("modbusValue:\(modbusValue.json)")
     }
 }
