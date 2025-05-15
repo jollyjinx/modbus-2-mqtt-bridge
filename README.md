@@ -20,6 +20,7 @@ A Docker image, specifically engineered for 64-bit ARM architecture, is availabl
 	docker run --name modbus2mqtt \
 		jollyjinx/modbus2mqtt:latest modbus2mqtt \
 		--modbus-server lambda \
+		--mqtt-servername=mqtt.local \
 		--topic lambda \
 		--device-description-file lambda.json
 ```
@@ -154,7 +155,7 @@ Starting the application
 ```
 > modbus2mqtt --topic=sma/sunnystore \
               --modbus-server=sunnyboy.local \
-              --mqtt-server=mqtt.local \
+              --mqtt-servername=mqtt.local \
               --device-description-file=sma.sunnystore.json
 ```
 
