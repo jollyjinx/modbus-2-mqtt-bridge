@@ -45,7 +45,7 @@ struct modbus2mqtt: AsyncParsableCommand
     var emitInterval: Double = 0.1
 
     @Option(name: .shortAndLong, help: "MQTT Server topic.")
-    var topic: String = "modbus/sunnyboy"
+    var topic: String = "example/modbus2mqttdevice"
 
     #if DEBUG
         @Option(name: .long, help: "Maximum time a mqttRequest can lie in the future/past to be accepted.")
@@ -382,6 +382,10 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: m
 
                 case .macaddress: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
                     let value = array.map { String(format: "%02X", $0) }.joined(separator: ":")
+                    payload = ModbusValue(address: mbd.address, value: .string(value))
+
+                case .hexstring: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
+                    let value = array.map { String(format: "%02X", $0) }.joined(separator: "")
                     payload = ModbusValue(address: mbd.address, value: .string(value))
             }
             errorCounter = 0

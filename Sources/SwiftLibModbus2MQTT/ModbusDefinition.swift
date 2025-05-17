@@ -38,6 +38,7 @@ public struct ModbusDefinition: Encodable, Sendable
         case string
         case ipv4address
         case macaddress
+        case hexstring
     }
 
     public let address: Int
