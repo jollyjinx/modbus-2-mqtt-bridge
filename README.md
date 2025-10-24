@@ -19,7 +19,7 @@ You can easily add json definition files for your own devices. All device defini
 
 ## Docker Container Use
 
-A Docker image, specifically engineered for 64-bit ARM architecture, is available. This image is compatible with a range of devices, including the Raspberry Pi, Apple Silicon Macs, and other 64-bit ARM computers. It can be employed directly using the following command:
+Docker images are available for both **AMD64** (x86_64) and **ARM64** (aarch64) architectures. These multi-architecture images are compatible with a wide range of devices, including x86 servers, Raspberry Pi, Apple Silicon Macs, and other ARM-based computers. The image can be used directly with the following command:
 
 ```
 	docker run --name modbus2mqtt \
