@@ -11,35 +11,13 @@ import NIO
 
 import JLog
 import SwiftLibModbus
-
-struct JNXServer
-{
-    let hostname: String
-    let port: UInt16
-    let username: String?
-    let password: String?
-
-    init(hostname: String, port: UInt16, username: String? = nil, password: String? = nil)
-    {
-        self.hostname = hostname
-        self.port = port
-        self.username = username
-        self.password = password
-    }
-}
-
-struct JNXMQTTServer
-{
-    let server: JNXServer
-    let emitInterval: Double
-    let topic: String
-}
+import SwiftLibModbus2MQTT
 
 #if !NSEC_PER_SEC
     let NSEC_PER_SEC = 1_000_000_000
 #endif
 
-extension JLog.Level: ExpressibleByArgument {}
+extension JLog.Level: @retroactive ExpressibleByArgument {}
 #if DEBUG
     let defaultLoglevel: JLog.Level = .debug
 #else
@@ -67,7 +45,7 @@ struct modbus2mqtt: AsyncParsableCommand
     var emitInterval: Double = 0.1
 
     @Option(name: .shortAndLong, help: "MQTT Server topic.")
-    var topic: String = "modbus/sunnyboy"
+    var topic: String = "example/modbus2mqttdevice"
 
     #if DEBUG
         @Option(name: .long, help: "Maximum time a mqttRequest can lie in the future/past to be accepted.")
@@ -112,7 +90,7 @@ struct modbus2mqtt: AsyncParsableCommand
 
         do
         {
-            let mqttServer = JNXMQTTServer(server: JNXServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), emitInterval: emitInterval, topic: topic)
+            let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
 
             let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
             {
@@ -151,7 +129,7 @@ func handleSIGUSR1(signal: Int32)
 }
 
 @MainActor
-func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options: modbus2mqtt) async throws
+func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
     var modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
@@ -249,6 +227,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                             JLog.debug("mapped to: \(request)")
 
                         case let (.uint16, .string(value)): fallthrough
+
                         case let (.int16, .string(value)): JLog.debug("Mapping \(request) to (U)Int16")
                             if let valueMap = mbd.map,
                                let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
@@ -299,12 +278,12 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
 
                         default: throw RequestError.attributeTypeCurrentlyNotSupported
                     }
-                    response = MQTTResponse(date: Date(), id: request.id, success: true, error: nil)
+                    response = MQTTResponse(request: request, success: true)
                 }
                 catch
                 {
                     JLog.error("Could not work on request: \(request) due to:\(error)")
-                    response = MQTTResponse(date: Date(), id: request.id, success: false, error: "\(error)")
+                    response = MQTTResponse(request: request, success: false, error: "\(error)")
                 }
 
                 let outdated = Date(timeIntervalSinceNow: -requestTTL)
@@ -398,12 +377,20 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: JNXMQTTServer, options
                 case .string: let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian)
                     payload = ModbusValue(address: mbd.address, value: .string(value))
 
-                case .ipv4address: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]
+                case .ipv4address: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
+                    let value = array.map { String($0) }.joined(separator: ".")
+                    payload = ModbusValue(address: mbd.address, value: .string(value))
+
+                case .ipv4address16: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]
                     let value = array.map { String($0) }.joined(separator: ".")
                     payload = ModbusValue(address: mbd.address, value: .string(value))
 
                 case .macaddress: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
                     let value = array.map { String(format: "%02X", $0) }.joined(separator: ":")
+                    payload = ModbusValue(address: mbd.address, value: .string(value))
+
+                case .hexstring: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
+                    let value = array.map { String(format: "%02X", $0) }.joined(separator: "")
                     payload = ModbusValue(address: mbd.address, value: .string(value))
             }
             errorCounter = 0

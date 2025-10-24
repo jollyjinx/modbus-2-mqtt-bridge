@@ -4,13 +4,18 @@
 
 It comes with json definition files for:
 
- - Lambda Eureka series heatpumps (EU8L, EU13L EU15L)
- - Phoenix Contact electric vehicle chargecontroller
- - Hanmatek HM310T laboratory power supply
- - SMA sunnyboy/-store inverters (left in here, even though [sma2mqtt](https://github.com/jollyjinx/sma2mqtt) is better for that use case)
- - GoodWe ET 15-30 inverter
+ - **B+G E-Tech SD100-00B** - Energy meter (`b+ge-tech.sd100-00b.json`)
+ - **GoodWe ET 15-30** - Solar inverter (`goodwe-et15-30.json`)
+ - **Hanmatek HM310T** - Laboratory power supply (`hanmatek.hm310t.json`)
+ - **Lambda Eureka series** - Heatpumps (EU8L, EU13L, EU15L) (`lambda.json`)
+ - **Lambda Solartherm** - Heat pump with solar thermal integration (`lambda.solartherm.json`)
+ - **Phoenix Contact** - Electric vehicle charge controller (`phoenix.evcharger.json`)
+ - **SMA Sunny Boy** - Solar inverter (`sma.sunnyboy.json` / `sma.sunnyboy.all.json`)
+ - **SMA Sunny Boy Storage** - Solar inverter with battery storage (`sma.sunnystore.json` / `sma.sunnystore.all.json`)
  
-and you can easily add json definition files for your own devices.
+*Note: `.all.json` versions contain extended register sets. For SMA devices, [sma2mqtt](https://github.com/jollyjinx/sma2mqtt) is recommended for better support.*
+
+You can easily add json definition files for your own devices. All device definitions are available in the [`DeviceDefinitions/`](DeviceDefinitions/) directory.
 
 ## Docker Container Use
 
