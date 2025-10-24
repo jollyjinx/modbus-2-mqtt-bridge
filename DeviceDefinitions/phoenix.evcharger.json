@@ -8,7 +8,7 @@
     "endianness" : "littleEndian",
     "mqtt": "visible",
     "interval": 10,
-    "topic": "immediate/carstatus",
+    "topic": "charging/carstatus",
     "title": "EV car status"
   },
   {
@@ -19,7 +19,7 @@
     "mqtt": "visible",
     "interval": 1000,
     "unit" : "A",
-    "topic": "immediate/proximitycurrent",
+    "topic": "charging/proximitycurrent",
     "title": "Proximity Charge Current"
   },
   {
@@ -155,7 +155,7 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"W",
-    "factor" : 1.0,
+    "factor" : 10.0,
     "topic": "immediate/power",
     "title": "Display Meter Power"
   },
@@ -194,8 +194,8 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"kWh",
-    "factor" : 0.01,
-    "topic": "immediate/currentchargingenergy",
+    "factor" : 0.001,
+    "topic": "charging/currentchargingenergy",
     "title": "Display Meter Current Charging Process Energy"
   },
   {
@@ -205,7 +205,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitalinput/xr",
+    "topic": "charging/digitalinput/xr",
     "title": "Digital Input External Release"
   },
   {
@@ -215,7 +215,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitalinput/ld",
+    "topic": "charging/digitalinput/ld",
     "title": "Digital Input Lock Detection"
   },
   {
@@ -225,7 +225,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitalinput/ml",
+    "topic": "charging/digitalinput/ml",
     "title": "Digital Input Manual Lock"
   },
   {
@@ -235,7 +235,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitaloutput/cr",
+    "topic": "charging/digitaloutput/cr",
     "title": "Digital Output Charger Ready"
   },
   {
@@ -245,7 +245,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitaloutput/lr",
+    "topic": "charging/digitaloutput/lr",
     "title": "Digital Output Locking Request"
   },
   {
@@ -255,7 +255,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitaloutput/vr",
+    "topic": "charging/digitaloutput/vr",
     "title": "Digital Output Vehicle Ready"
   },
   {
@@ -265,7 +265,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/digitaloutput/er",
+    "topic": "charging/digitaloutput/er",
     "title": "Digital Output Error"
   },
   {
@@ -275,7 +275,7 @@
     "valuetype": "bool",
     "mqtt": "visible",
     "interval": 5,
-    "topic": "immediate/charging/enable",
+    "topic": "charging/enable",
     "title": "Enable charging process"
   },
   {
@@ -286,7 +286,7 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" : "A",
-    "topic": "immediate/chargecurrent",
+    "topic": "charging/chargecurrent",
     "title": "Current Charge Current"
   },
   {
