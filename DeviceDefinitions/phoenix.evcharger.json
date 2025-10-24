@@ -130,7 +130,7 @@
     "interval": 5,
     "unit" :"A",
     "factor": 0.001,
-    "topic": "immediate/p3/voltage",
+    "topic": "immediate/p2/current",
     "title": "Display Meter Current I2"
   },
   {
