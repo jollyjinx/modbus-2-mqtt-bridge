@@ -42,6 +42,18 @@
     "endianness" : "littleEndian",
     "mqtt": "visible",
     "interval": 1000,
+    "bits": {
+        "0": { "name" : "px-request" },
+        "1": { "name" : "px-evaluation" },
+        "2": { "name" : "px-selection" },
+        "3": { "name" : "locking-execute" },
+        "4": { "name" : "locking-option" },
+        "5": { "name" : "locking-confirmation" },
+        "6": { "name" : "enable-charging", },
+        "7": { "name" : "station-available" },
+        "8": { "name" : "locking-manual" },
+        "9": { "name" : "enable-ethernet"}
+    },
     "topic": "settings/dipswitchstate",
     "title": "Dip Switch State"
   },
