@@ -116,7 +116,7 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"A",
-    "factor": 0.01,
+    "factor": 0.001,
     "topic": "immediate/p1/current",
     "title": "Display Meter Current I1"
   },
@@ -129,7 +129,7 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"A",
-    "factor": 0.01,
+    "factor": 0.001,
     "topic": "immediate/p3/voltage",
     "title": "Display Meter Current I2"
   },
@@ -142,7 +142,7 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"A",
-    "factor": 0.01,
+    "factor": 0.001,
     "topic": "immediate/p3/current",
     "title": "Display Meter Current I3"
   },
@@ -155,9 +155,22 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"W",
-    "factor" : 0.01,
+    "factor" : 1.0,
     "topic": "immediate/power",
     "title": "Display Meter Power"
+  },
+  {
+    "address": 128,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "endianness" : "littleEndian",
+    "mqtt": "visible",
+    "interval": 5,
+    "unit" :"kWh",
+    "factor" : 0.01,
+    "topic": "immediate/energy",
+    "title": "Display Meter Energy"
   },
   {
     "address": 130,
@@ -168,9 +181,22 @@
     "mqtt": "visible",
     "interval": 5,
     "unit" :"W",
-    "factor" : 0.01,
+    "factor" : 10.0,
     "topic": "immediate/maximumpower",
     "title": "Display Meter Maximum Power"
+  },
+  {
+    "address": 132,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "endianness" : "littleEndian",
+    "mqtt": "visible",
+    "interval": 5,
+    "unit" :"kWh",
+    "factor" : 0.01,
+    "topic": "immediate/currentchargingenergy",
+    "title": "Display Meter Current Charging Process Energy"
   },
   {
     "address": 201,
