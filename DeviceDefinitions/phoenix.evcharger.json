@@ -31,7 +31,7 @@
     "mqtt": "visible",
     "interval": 10,
     "unit" :"s",
-    "topic": "immediate/chargetime",
+    "topic": "charging/chargetime",
     "title": "Chargetime"
   },
   {
