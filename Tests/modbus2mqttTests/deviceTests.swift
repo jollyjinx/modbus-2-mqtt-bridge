@@ -1,13 +1,12 @@
 //
-//  modbus2mqttTests.swift
+//  deviceTests.swift
 //
 
 import Foundation
 import JLog
 import SwiftLibModbus
-import Testing
 import SwiftLibModbus2MQTT
-
+import Testing
 
 @Suite("Device Tests")
 struct deviceTests
@@ -54,8 +53,6 @@ struct deviceTests
         }
     }
 
-
-
 //    @Test(.disabled("Only works when attached"))
     func float32PhoenixController() async throws
     {
@@ -66,8 +63,7 @@ struct deviceTests
         let startAddress: Float32 = 352
         let endAddress: Float32 = 358
         let stridesize: Int = MemoryLayout<Float32>.size / MemoryLayout<UInt16>.size
-        let count: Int = Int(endAddress - startAddress) / stridesize
-
+        let count = Int(endAddress - startAddress) / stridesize
 
         var store = [Int: [Float32]]()
         let emptyline = [Float32](repeating: 0, count: count)
@@ -87,7 +83,6 @@ struct deviceTests
             }
         }
 
-
         for address in stride(from: 352, to: 358, by: stripesize)
         {
             try await readData(from: address)
@@ -103,5 +98,4 @@ struct deviceTests
             }
         }
     }
-
 }

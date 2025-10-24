@@ -227,6 +227,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: m
                             JLog.debug("mapped to: \(request)")
 
                         case let (.uint16, .string(value)): fallthrough
+
                         case let (.int16, .string(value)): JLog.debug("Mapping \(request) to (U)Int16")
                             if let valueMap = mbd.map,
                                let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
@@ -376,7 +377,11 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: m
                 case .string: let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian)
                     payload = ModbusValue(address: mbd.address, value: .string(value))
 
-                case .ipv4address: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]
+                case .ipv4address: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
+                    let value = array.map { String($0) }.joined(separator: ".")
+                    payload = ModbusValue(address: mbd.address, value: .string(value))
+
+                case .ipv4address16: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]
                     let value = array.map { String($0) }.joined(separator: ".")
                     payload = ModbusValue(address: mbd.address, value: .string(value))
 

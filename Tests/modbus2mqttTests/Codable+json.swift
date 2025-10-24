@@ -1,3 +1,7 @@
+//
+//  Codable+json.swift
+//
+
 public extension Encodable
 {
     var json: String

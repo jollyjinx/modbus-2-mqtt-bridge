@@ -1,8 +1,9 @@
 FROM --platform=$BUILDPLATFORM swift:latest AS modbus2mqttbuilder
 WORKDIR /swift
+ENV SWIFTPM_BUILD_TESTS=false
 COPY Sources Sources
 COPY Package.swift Package.swift
-RUN swift build -v -c release
+RUN swift build -v -c release --product modbus2mqtt 
 RUN chmod -R u+rwX,go+rX-w /swift/.build/release/
 
 FROM swift:slim

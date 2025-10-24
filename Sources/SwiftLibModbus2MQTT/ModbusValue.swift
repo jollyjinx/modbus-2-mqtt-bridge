@@ -46,9 +46,11 @@ public extension ModbusValue
             case let .bool(value): return String(value)
 
             case let .uint8(value): return String(value)
+
             case let .int8(value): return String(value)
 
             case let .uint16(value): return String(value)
+
             case let .int16(value): return String(value)
 
             case let .uint32(value): return String(value)
@@ -56,7 +58,9 @@ public extension ModbusValue
             case let .int32(value): return String(value)
 
             case let .uint64(value): return String(value)
+
             case let .int64(value): return String(value)
+
             case let .string(value): return String(value)
         }
     }
@@ -106,9 +110,11 @@ extension ModbusValue: Encodable
                 case let .bool(value): try container.encode(value, forKey: .rawValue)
 
                 case let .uint8(value): try container.encode(value, forKey: .rawValue)
+
                 case let .int8(value): try container.encode(value, forKey: .rawValue)
 
                 case let .uint16(value): try container.encode(value, forKey: .rawValue)
+
                 case let .int16(value): try container.encode(value, forKey: .rawValue)
 
                 case let .uint32(value): try container.encode(value, forKey: .rawValue)
@@ -116,7 +122,9 @@ extension ModbusValue: Encodable
                 case let .int32(value): try container.encode(value, forKey: .rawValue)
 
                 case let .uint64(value): try container.encode(value, forKey: .rawValue)
+
                 case let .int64(value): try container.encode(value, forKey: .rawValue)
+
                 case let .string(value): try container.encode(value, forKey: .rawValue)
             }
         }
@@ -211,6 +219,7 @@ extension ModbusValue: Encodable
                     {
                         try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
                     }
+
                 case let .string(value): try container.encode(value, forKey: .value)
             }
         }

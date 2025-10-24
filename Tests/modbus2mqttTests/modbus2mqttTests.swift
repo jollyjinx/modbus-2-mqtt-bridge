@@ -5,8 +5,8 @@
 import Foundation
 import JLog
 import SwiftLibModbus
-import Testing
 import SwiftLibModbus2MQTT
+import Testing
 
 @Suite("Modbus Tests")
 struct modbus2mqttTests
@@ -44,7 +44,8 @@ struct modbus2mqttTests
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-	#expect(throws: (any Error).self) {
+        #expect(throws: (any Error).self)
+        {
             let definitions = try ModbusDefinition.read(from: url)
         }
     }
@@ -77,7 +78,6 @@ struct modbus2mqttTests
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        
         let definitions = try ModbusDefinition.read(from: url)
     }
 
@@ -116,6 +116,5 @@ struct modbus2mqttTests
         let definitions = try ModbusDefinition.read(from: url)
 
         let modbusValue = ModbusValue(address: 1, value: .uint32(0b1111111))
-
     }
 }
