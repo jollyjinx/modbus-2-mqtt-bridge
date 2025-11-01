@@ -13,6 +13,10 @@ import JLog
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 #if !NSEC_PER_SEC
     let NSEC_PER_SEC = 1_000_000_000
 #endif

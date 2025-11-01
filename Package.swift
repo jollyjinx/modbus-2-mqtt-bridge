@@ -14,9 +14,9 @@ let package = Package(name: "modbus2mqtt",
                           .library(name: "SwiftLibModbus2MQTT", targets: ["SwiftLibModbus2MQTT"]),
                       ],
                       dependencies: [
-                          .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.2")),
+                          .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.6.2")),
                           .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.8.0"),
-                          .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.7")),
+                          .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.9")),
                           .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from: "2.0.2"),
                       ],
                       targets: [
