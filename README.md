@@ -203,9 +203,41 @@ OPTIONS:
   --device-description-file <device-description-file>
                           Modbus Device Description file (JSON). (default:
                           sma.sunnyboy.json)
+  --device-reset-url <device-reset-url>
+                          Device Reset URL (HTTP GET) - called when
+                          communication fails repeatedly.
   -h, --help              Show help information.
 
 ```
+
+## Device Reset for Unreliable Connections
+
+Some Modbus devices may stop responding due to firmware issues, network problems, or hardware glitches. The `--device-reset-url` option provides an automatic recovery mechanism.
+
+**How it works:**
+- **modbus2mqtt** tracks communication errors with an error counter
+- After 7 consecutive failures, it calls the specified reset URL (HTTP GET request)
+- The URL typically triggers a device reboot (e.g., via a smart power switch, relay, or device management interface)
+- After calling the reset URL, it waits 60 seconds for the device to reboot
+- Communication attempts resume automatically
+- If errors continue beyond 10 failures, the application exits
+
+**Example use cases:**
+```bash
+# Reset via Tasmota/Sonoff power switch
+modbus2mqtt --modbus-server=mydevice.local \
+            --device-reset-url="http://switch.local/cm?cmnd=Power%20Toggle"
+
+# Reset via Shelly relay (double toggle for reboot)
+modbus2mqtt --modbus-server=mydevice.local \
+            --device-reset-url="http://192.168.1.50/relay/0?turn=off"
+
+# Reset via custom REST API
+modbus2mqtt --modbus-server=mydevice.local \
+            --device-reset-url="http://192.168.1.100/api/reset"
+```
+
+This feature significantly improves reliability for devices with known stability issues.
 
 ## Feedback welcome
 

@@ -76,6 +76,9 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Modbus Device Description file (JSON).")
     var deviceDescriptionFile = "sma.sunnyboy.json"
 
+    @Option(name: .long, help: "Device Reset URL (HTTP GET) - called when communication fails repeatedly.")
+    var deviceResetURL: String?
+
     @MainActor
     func run() async throws
     {
@@ -87,9 +90,23 @@ struct modbus2mqtt: AsyncParsableCommand
         {
             JLog.info("Loglevel: \(logLevel)")
         }
-
+        
         do
         {
+            // Validate reset URL at startup if provided
+            let resetURL: URL?
+            
+            if let urlString = deviceResetURL,
+               let url = URL(string: urlString), url.host != nil,
+               let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https"
+            {
+                JLog.notice("Device reset URL configured: \(urlString)")
+                resetURL = url
+            } else 
+            {
+                resetURL = nil
+            }
+            
             let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
 
             let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
@@ -101,13 +118,17 @@ struct modbus2mqtt: AsyncParsableCommand
                 try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
             }
 
-            try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, options: self)
+            try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, resetURL: resetURL, options: self)
         }
         catch
         {
             JLog.error("Got error:\(error)")
         }
     }
+}
+
+enum ValidationError: Error {
+    case invalidResetURL(String)
 }
 
 func handleSIGUSR1(signal: Int32)
@@ -128,8 +149,27 @@ func handleSIGUSR1(signal: Int32)
     }
 }
 
+func callResetURL(_ url: URL) async throws
+{
+    JLog.notice("Calling device reset URL: \(url.absoluteString)")
+    
+    let (data, response) = try await URLSession.shared.data(from: url)
+    
+    if let httpResponse = response as? HTTPURLResponse {
+        JLog.notice("Reset URL response: HTTP \(httpResponse.statusCode)")
+        if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
+            JLog.notice("Device reset triggered successfully")
+            if let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
+                JLog.debug("Reset response: \(responseString)")
+            }
+        } else {
+            JLog.warning("Reset URL returned HTTP \(httpResponse.statusCode)")
+        }
+    }
+}
+
 @MainActor
-func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: modbus2mqtt) async throws
+func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
     var modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
@@ -439,6 +479,20 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, options: m
         catch
         {
             errorCounter += 1
+            
+            // Try to reset device if configured and error threshold reached
+            if errorCounter == 7, let url = resetURL {
+                JLog.warning("Error threshold reached (\(errorCounter) errors), attempting device reset")
+                do {
+                    try await callResetURL(url)
+                    JLog.notice("Waiting 60 seconds for device to reboot...")
+                    try? await Task.sleep(nanoseconds: UInt64(60 * NSEC_PER_SEC))
+                    JLog.notice("Attempting to resume communication")
+                } catch {
+                    JLog.error("Failed to call reset URL: \(error)")
+                }
+            }
+            
             if errorCounter > 10
             {
                 throw error
