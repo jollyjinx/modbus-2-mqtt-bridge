@@ -14,7 +14,7 @@ import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
 #if canImport(FoundationNetworking)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 
 #if !NSEC_PER_SEC
@@ -94,23 +94,24 @@ struct modbus2mqtt: AsyncParsableCommand
         {
             JLog.info("Loglevel: \(logLevel)")
         }
-        
+
         do
         {
             // Validate reset URL at startup if provided
             let resetURL: URL?
-            
+
             if let urlString = deviceResetURL,
                let url = URL(string: urlString), url.host != nil,
                let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https"
             {
                 JLog.notice("Device reset URL configured: \(urlString)")
                 resetURL = url
-            } else 
+            }
+            else
             {
                 resetURL = nil
             }
-            
+
             let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
 
             let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
@@ -131,7 +132,8 @@ struct modbus2mqtt: AsyncParsableCommand
     }
 }
 
-enum ValidationError: Error {
+enum ValidationError: Error
+{
     case invalidResetURL(String)
 }
 
@@ -156,18 +158,36 @@ func handleSIGUSR1(signal: Int32)
 func callResetURL(_ url: URL) async throws
 {
     JLog.notice("Calling device reset URL: \(url.absoluteString)")
-    
-    let (data, response) = try await URLSession.shared.data(from: url)
-    
-    if let httpResponse = response as? HTTPURLResponse {
-        JLog.notice("Reset URL response: HTTP \(httpResponse.statusCode)")
-        if httpResponse.statusCode >= 200 && httpResponse.statusCode < 300 {
-            JLog.notice("Device reset triggered successfully")
-            if let responseString = String(data: data, encoding: .utf8), !responseString.isEmpty {
-                JLog.debug("Reset response: \(responseString)")
+
+    var request = URLRequest(url: url)
+    request.timeoutInterval = 5 // shorter timeout since device will reboot quickly
+
+    do
+    {
+        let (_, response) = try await URLSession.shared.data(for: request)
+        if let http = response as? HTTPURLResponse
+        {
+            JLog.notice("Reset URL response: HTTP \(http.statusCode)")
+            if http.statusCode == 303 || (200 ..< 400).contains(http.statusCode)
+            {
+                JLog.notice("Device reset triggered successfully (status \(http.statusCode))")
             }
-        } else {
-            JLog.warning("Reset URL returned HTTP \(httpResponse.statusCode)")
+            else
+            {
+                JLog.warning("Unexpected reset response: \(http.statusCode)")
+            }
+        }
+    }
+    catch
+    {
+        // Connection drop during reboot → expected
+        if let urlError = error as? URLError, urlError.code == .timedOut || urlError.code == .networkConnectionLost
+        {
+            JLog.notice("Device likely rebooting (connection lost during reset)")
+        }
+        else
+        {
+            throw error
         }
     }
 }
@@ -483,20 +503,24 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
         catch
         {
             errorCounter += 1
-            
+
             // Try to reset device if configured and error threshold reached
-            if errorCounter == 7, let url = resetURL {
+            if errorCounter == 7, let url = resetURL
+            {
                 JLog.warning("Error threshold reached (\(errorCounter) errors), attempting device reset")
-                do {
+                do
+                {
                     try await callResetURL(url)
                     JLog.notice("Waiting 60 seconds for device to reboot...")
                     try? await Task.sleep(nanoseconds: UInt64(60 * NSEC_PER_SEC))
                     JLog.notice("Attempting to resume communication")
-                } catch {
+                }
+                catch
+                {
                     JLog.error("Failed to call reset URL: \(error)")
                 }
             }
-            
+
             if errorCounter > 10
             {
                 throw error
