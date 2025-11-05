@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM swift:latest AS modbus2mqttbuilder
+FROM swift:latest AS modbus2mqttbuilder
 WORKDIR /swift
 ENV SWIFTPM_BUILD_TESTS=false
 COPY Sources Sources
