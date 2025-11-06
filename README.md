@@ -5,6 +5,7 @@
 It comes with json definition files for:
 
  - **B+G E-Tech SD100-00B** - Energy meter (`b+ge-tech.sd100-00b.json`)
+ - **DaheimLader Wallbox** - Daheimladen Wallbox (`daheimladen.json`)
  - **GoodWe ET 15-30** - Solar inverter (`goodwe-et15-30.json`)
  - **Hanmatek HM310T** - Laboratory power supply (`hanmatek.hm310t.json`)
  - **Lambda Eureka series** - Heatpumps (EU8L, EU13L, EU15L) (`lambda.json`)
