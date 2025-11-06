@@ -115,7 +115,7 @@ After creating your own json definition, you can use it with the commandline opt
 ## Bridge goes both ways
 
 **modbus2mqtt** is a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
-It uses a Request/Response pattern. You send a mqtt request to the mqtt request topic and are give the result of the request in the response topic path.
+It uses a Request/Response pattern. You send a mqtt request to the mqtt request topic and are given the result of the request in the response topic path.
 
 To set the output voltage of the HM310T to 14.04 Volt you can send the following json 
 
@@ -154,7 +154,7 @@ struct MQTTResponse:Encodable,Decodable
 
 ## Status
 
-I'm using it 24/7 on my own modbus devices (the devices I created JSON definitions for).
+I'm using it 24/7 on my own modbus devices (lambda, B+G E-Tech SD100-00B, phoenix-charger, Hanmatek HM310T).
 
 Starting the application
 
