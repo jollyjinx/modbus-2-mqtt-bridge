@@ -5,22 +5,22 @@
     "modbusaccess": "read",
     "valuetype": "uint16",
     "map": {
-      "1": "Bereit",
-      "2": "Verbunden",
-      "3": "Laden startet",
-      "4": "Lädt",
-      "5": "Start fehlgeschlagen",
-      "6": "Laden beendet",
-      "7": "Systemfehler",
-      "8": "Ladetimer",
-      "9": "Firmware Upgrade",
-      "10": "Eingeschaltet",
-      "31": "Blockiert"
+        "1": "Standby",
+        "2": "Verbunden",
+        "3": "Laden startet",
+        "4": "Lädt",
+        "5": "Start fehlgeschlagen",
+        "6": "Laden beendet",
+        "7": "Systemfehler",
+        "8": "Terminladung",
+        "9": "Firmware-Upgrade aktiv",
+        "10": "Eingeschaltet",
+        "31": "Blockiert",
     },
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimlader_charging_station_",
-    "title": "DaheimLader Status"
+    "topic": "device/daheimlader_charging_station_state",
+    "title": "Ladezustand"
   },
   {
     "address": 2,
@@ -28,13 +28,13 @@
     "modbusaccess": "read",
     "valuetype": "uint16",
     "map": {
-      "0": "Nicht verbunden",
-      "1": "Verbunden"
+        "0": "Nicht verbunden",
+        "1": "Verbunden",
     },
     "interval": 30,
     "mqtt": "visible",
     "topic": "device/daheimlader_cable_state",
-    "title": "DaheimLader Status Ladekabel"
+    "title": "Kabelstatus"
   },
   {
     "address": 4,
@@ -42,26 +42,61 @@
     "modbusaccess": "read",
     "valuetype": "uint16",
     "map": {
-      "0": "kein Fehler",
-      "11": "CP-Kontroll Wert",
-      "13": "Unterspannung",
-      "14": "Überspannung",
-      "15": "Temperatur zu hoch",
-      "16": "Zählerwert",
-      "17": "Leckage",
-      "18": "Output Short",
-      "19": "Überstrom",
-      "21": "Fahrzeug",
-      "22": "Fahrzeug nicht erkannt",
-      "23": "Relais",
-      "24": "Leckage, Gerät prüfen",
-      "25": "PE-Fehler",
-      "26": "Start / Stopp Ladefehler"
+        "0": "kein Fehler",
+        "11": "CP-Spannungsfehler",
+        "12": "Not-Aus gedrückt",
+        "13": "Unterspannung",
+        "14": "Überspannung",
+        "15": "Übertemperatur",
+        "16": "Zählerfehler",
+        "17": "Fehlerhafte Erdung/Leckage",
+        "18": "Ausgangskurzschluss",
+        "19": "Überstrom",
+        "21": "Fahrzeug lädt nicht",
+        "22": "Fahrzeug nicht erkannt",
+        "23": "Relais klebt",
+        "24": "Leckageprüfgerät defekt",
+        "25": "PE-Fehler",
+        "26": "Start fehlgeschlagen",
+        
     },
     "interval": 30,
     "mqtt": "visible",
     "topic": "device/daheimlader_fault_code",
-    "title": "DaheimLader Fehlercode"
+    "title": "Fehlercode"
+  },
+  {
+    "address": 6,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_l1_charging_current",
+    "title": "Ladestrom L1"
+  },
+  {
+    "address": 8,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_l2_charging_current",
+    "title": "Ladestrom L2"
+  },
+  {
+    "address": 10,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_l3_charging_current",
+    "title": "Ladestrom L3"
   },
   {
     "address": 12,
@@ -72,56 +107,7 @@
     "interval": 30,
     "mqtt": "visible",
     "topic": "device/daheimlader_active_power",
-    "title": "DaheimLader Ladeleistung"
-  },
-  {
-    "address": 28,
-    "modbustype": "holding",
-    "modbusaccess": "read",
-    "valuetype": "uint32",
-    "unit": "kWh",
-    "interval": 30,
-    "mqtt": "visible",
-    "topic": "device/daheimLader_energy_meter",
-    "title": "DaheimLader Zählerstand"
-  },
-  {
-    "address": 72,
-    "modbustype": "holding",
-    "modbusaccess": "read",
-    "valuetype": "uint32",
-    "unit": "s",
-    "interval": 30,
-    "mqtt": "visible",
-    "topic": "device/daheimLader_charged_energy",
-    "title": "DaheimLader geladene Energie"
-  },
-  {
-    "address": 78,
-    "modbustype": "holding",
-    "modbusaccess": "read",
-    "valuetype": "uint16",
-    "unit": "kWh",
-    "interval": 30,
-    "mqtt": "visible",
-    "topic": "device/daheimlader_charging_time",
-    "title": "DaheimLader Ladedauer"
-  },
-  {
-    "address": 93,
-    "modbustype": "holding",
-    "modbusaccess": "read",
-    "valuetype": "uint16",
-    "map": {
-      "0": "Plug % Charge",
-      "1": "RFID / OCPP Start+Stopp",
-      "2": "Ladestation gesperrt"
-    },
-    "unit": "kWh",
-    "interval": 30,
-    "mqtt": "visible",
-    "topic": "device/daheimlader_charge_control",
-    "title": "DaheimLader Modus"
+    "title": "Gesamtleistung"
   },
   {
     "address": 16,
@@ -131,8 +117,8 @@
     "unit": "W",
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimLader_l1_charging_power",
-    "title": "DaheimLader Ladeleistung L1"
+    "topic": "device/daheimlader_l1_charging_power",
+    "title": "Ladeleistung L1"
   },
   {
     "address": 20,
@@ -142,8 +128,8 @@
     "unit": "W",
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimLader_l2_charging_power",
-    "title": "DaheimLader Ladeleistung L2"
+    "topic": "device/daheimlader_l2_charging_power",
+    "title": "Ladeleistung L2"
   },
   {
     "address": 24,
@@ -153,7 +139,266 @@
     "unit": "W",
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimLader_l3_charging_power",
-    "title": "DaheimLader Ladeleistung L3"
-  }
+    "topic": "device/daheimlader_l3_charging_power",
+    "title": "Ladeleistung L3"
+  },
+  {
+    "address": 28,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "unit": "kWh",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_energy_meter",
+    "title": "Zählerstand"
+  },
+  {
+    "address": 32,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_max_charging_current",
+    "title": "Maximaler Strom der Ladestation"
+  },
+  {
+    "address": 34,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_min_charging_current",
+    "title": "Minimaler Strom der Ladestation"
+  },
+  {
+    "address": 36,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "A",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_max_cable_current",
+    "title": "Maximaler Strom des Kabels"
+  },
+  {
+    "address": 38,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_serial",
+    "title": "Seriennummer der Ladestation"
+  },
+  {
+    "address": 54,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_card_id",
+    "title": "RFIC-Kartennummer"
+  },
+  
+  {
+    "address": 72,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "unit": "s",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charged_energy",
+    "title": "Geladene Energie"
+  },
+    {
+    "address": 74,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_starttime",
+    "title": "Startzeit der Ladung"
+  },
+  {
+    "address": 78,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_duration",
+    "title": "Dauer der Ladung"
+  },
+  {
+    "address": 82,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_endtime",
+    "title": "Endzeit der Ladung"
+  },
+  {
+    "address": 87,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_power_outage",
+    "title": "Strombegrenzung bei Kommunikationsunterbrechung"
+  },
+  {
+    "address": 89,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_timeout",
+    "title": "Timeout bei Kommunikationsunterbrechung"
+  },
+  {
+    "address": 91,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_power_limitation",
+    "title": "Strombegrenzung"
+  },
+  {
+    "address": 93,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "map": {
+        "0": "Plug & Charge",
+        "1": "RFID / OCPP Start+Stopp",
+        "2": "Ladestation gesperrt",
+    },
+    "unit": "kWh",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charge_control",
+    "title": "Lademodus"
+  },
+  {
+    "address": 95,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "map": {
+        "1": "Start",
+        "2": "Stopp",
+    },
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_command",
+    "title": "Ladebefehl"
+  },
+  {
+    "address": 97,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_date_time",
+    "title": "Datum und Uhrzeit der Ladestation"
+  },
+  {
+    "address": 109,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_realtime_voltage_l1",
+    "title": "Echtzeitspannung L1"
+  },
+  {
+    "address": 111,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_realtime_voltage_l2",
+    "title": "Echtzeitspannung L2"
+  },
+  {
+    "address": 113,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_realtime_voltage_l3",
+    "title": "Echtzeitspannung L3"
+  },
+  {
+    "address": 115,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_display_text_while_deactivated",
+    "title": "Hinweistext bei deaktivierter Ladestation"
+  },
+  {
+    "address": 184,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "map": {
+        "1": "Einphasig",
+        "2": "Dreiphasig",
+    },
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_phase_state",
+    "title": "Phasenstatus"
+  },
+  {
+    "address": 186,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "map": {
+        "1": "Wechsel zu Einphasig",
+        "2": "Wechsel zu Dreiphasig",
+    },
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_phasechange_command",
+    "title": "Phasenwechselbefehl"
+  },
+  {
+    "address": 188,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "map": {
+        "0": "Standby",
+        "1": "Wechsel aktiv",
+        "2": "Wechsel abgeschlossen",
+    },
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_phasechange_state",
+    "title": "Phasenwechselstatus"
+  },
 ]
