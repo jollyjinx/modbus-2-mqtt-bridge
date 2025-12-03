@@ -24,7 +24,7 @@ Docker images are available for both **AMD64** (x86_64) and **ARM64** (aarch64) 
 
 ```
 	docker run --name modbus2mqtt \
-		jollyjinx/modbus2mqtt:latest modbus2mqtt \
+		ghcr.io/jollyjinx/modbus-2-mqtt-bridge:latest modbus2mqtt \
 		--modbus-server lambda \
 		--mqtt-servername=mqtt.local \
 		--topic lambda \
