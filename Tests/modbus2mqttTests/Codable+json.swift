@@ -2,14 +2,15 @@
 //  Codable+json.swift
 //
 
+import Foundation
+
 public extension Encodable
 {
     var json: String
     {
         let jsonEncoder = JSONEncoder()
-        jsonEncoder.outputFormatting = [.sortedKeys]
         jsonEncoder.dateEncodingStrategy = .iso8601
-        jsonEncoder.outputFormatting = [.prettyPrinted]
+        jsonEncoder.outputFormatting = [.sortedKeys, .prettyPrinted]
         let jsonData = try? jsonEncoder.encode(self)
         return jsonData != nil ? String(data: jsonData!, encoding: .utf8) ?? "" : ""
     }

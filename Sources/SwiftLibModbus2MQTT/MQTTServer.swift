@@ -2,7 +2,7 @@
 //  MQTTServer.swift
 //
 
-public struct MQTTServer
+public struct MQTTServer: Sendable
 {
     public let hostname: String
     public let port: UInt16
@@ -18,7 +18,7 @@ public struct MQTTServer
     }
 }
 
-public struct MQTTDevice
+public struct MQTTDevice: Sendable
 {
     public let server: MQTTServer
     public let topic: String

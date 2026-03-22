@@ -1,7 +1,11 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+
+let strictSwiftSettings: [SwiftSetting] = [
+    .enableUpcomingFeature("StrictConcurrency"),
+]
 
 let package = Package(name: "modbus2mqtt",
                       platforms: [
@@ -28,14 +32,20 @@ let package = Package(name: "modbus2mqtt",
                                             ],
                                             resources: [
                                                 .copy("DeviceDefinitions/"),
-                                            ]),
+                                            ],
+                                            swiftSettings: strictSwiftSettings),
                           .target(name: "SwiftLibModbus2MQTT",
                                   dependencies: [
                                       .product(name: "MQTTNIO", package: "mqtt-nio"),
                                       .product(name: "JLog", package: "JLog"),
                                       .product(name: "SwiftLibModbus", package: "SwiftLibModbus"),
-                                  ]),
-                          // .testTarget(
-                          //     name: "modbus2mqttTests",
-                          //     dependencies: ["SwiftLibModbus2MQTT"]),
-                      ])
+                                  ],
+                                  swiftSettings: strictSwiftSettings),
+                          .testTarget(name: "modbus2mqttTests",
+                                      dependencies: [
+                                          "SwiftLibModbus2MQTT",
+                                          .product(name: "SwiftLibModbus", package: "SwiftLibModbus"),
+                                      ],
+                                      swiftSettings: strictSwiftSettings),
+                      ],
+                      swiftLanguageModes: [.v6])

@@ -5,7 +5,7 @@
 import Foundation
 import JLog
 
-public enum ModbusType: Equatable
+public enum ModbusType: Equatable, Sendable
 {
     case bool(Bool)
 
@@ -23,7 +23,7 @@ public enum ModbusType: Equatable
 
 extension ModbusType: Decodable {}
 
-public struct ModbusValue: Equatable
+public struct ModbusValue: Equatable, Sendable
 {
     public let address: Int
     public let value: ModbusType
@@ -37,8 +37,16 @@ public struct ModbusValue: Equatable
 
 public extension ModbusValue
 {
-    var topic: String { ModbusDefinition.modbusDefinitions[address]?.topic ?? "address/\(address)" }
-    var mqttVisibility: MQTTVisibilty { ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible }
+    var topic: String
+    {
+        ModbusDefinition.modbusDefinitions[address]?.topic ?? "address/\(address)"
+    }
+
+    var mqttVisibility: MQTTVisibilty
+    {
+        ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible
+    }
+
     var stringValue: String
     {
         switch value

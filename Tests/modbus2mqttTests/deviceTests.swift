@@ -3,17 +3,16 @@
 //
 
 import Foundation
-import JLog
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
-import Testing
+import XCTest
 
-@Suite("Device Tests")
-struct deviceTests
+final class DeviceTests: XCTestCase
 {
-    @Test(.disabled("Only works when attached"))
-    func reverseEngineerHM310T() async throws
+    func testReverseEngineerHM310T() async throws
     {
+        try XCTSkipIf(true, "Only works when attached")
+
         // Prints out modbus address ranges and compares them to the last time
 
         let modbusDevice = try ModbusDevice(device: "/dev/tty.usbserial-42340", baudRate: 9600)
@@ -53,37 +52,37 @@ struct deviceTests
         }
     }
 
-//    @Test(.disabled("Only works when attached"))
-    func float32PhoenixController() async throws
+    func testFloat32PhoenixController() async throws
     {
+        try XCTSkipIf(true, "Only works when attached")
+
         // Prints out modbus address ranges and compares them to the last time
 
         let modbusDevice = try ModbusDevice(networkAddress: "10.98.16.12", port: 502, deviceAddress: 180)
 
-        let startAddress: Float32 = 352
-        let endAddress: Float32 = 358
-        let stridesize: Int = MemoryLayout<Float32>.size / MemoryLayout<UInt16>.size
-        let count = Int(endAddress - startAddress) / stridesize
+        let startAddress = 352
+        let endAddress = 358
+        let strideSize = MemoryLayout<Float32>.size / MemoryLayout<UInt16>.size
+        let count = (endAddress - startAddress) / strideSize
 
         var store = [Int: [Float32]]()
         let emptyline = [Float32](repeating: 0, count: count)
 
-        func readData(from address: Float32) async throws
+        func readData(from address: Int) async throws
         {
-            let data: [Float32] = try await modbusDevice.readRegisters(from: startAddress, count: count, type: .holding)
+            let data: [Float32] = try await modbusDevice.readRegisters(from: address, count: count, type: .holding)
 
             let previous: [Float32] = store[address] ?? emptyline
 
             if data != previous
             {
-                print("\(String(format: "%04x", address)): \(data.map { $0 == 0 ? "  -   " : String(format: "%04x  ", $0) }.joined(separator: " ")) ")
-                print("\(String(format: "%04x", address)): \(data.map { $0 == 0 ? "      " : String(format: "%05d ", $0) }.joined(separator: " ")) ")
+                print("\(String(format: "%04x", address)): \(data.map { String(format: "%8.3f", $0) }.joined(separator: " "))")
                 print("")
                 store[address] = data
             }
         }
 
-        for address in stride(from: 352, to: 358, by: stripesize)
+        for address in stride(from: startAddress, to: endAddress, by: strideSize)
         {
             try await readData(from: address)
         }

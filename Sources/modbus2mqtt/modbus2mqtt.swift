@@ -2,14 +2,12 @@
 //  modbus2mqtt.swift
 //
 
+import ArgumentParser
 import Dispatch
 import Foundation
-
-import ArgumentParser
+import JLog
 import MQTTNIO
 import NIO
-
-import JLog
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
@@ -20,6 +18,8 @@ import SwiftLibModbus2MQTT
 #if !NSEC_PER_SEC
     let NSEC_PER_SEC = 1_000_000_000
 #endif
+
+private let serviceRestartDelay: TimeInterval = 30
 
 extension JLog.Level: @retroactive ExpressibleByArgument {}
 #if DEBUG
@@ -83,7 +83,6 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Device Reset URL (HTTP GET) - called when communication fails repeatedly.")
     var deviceResetURL: String?
 
-    @MainActor
     func run() async throws
     {
         JLog.loglevel = logLevel
@@ -95,46 +94,55 @@ struct modbus2mqtt: AsyncParsableCommand
             JLog.info("Loglevel: \(logLevel)")
         }
 
-        do
+        // Validate static configuration once so startup errors fail fast.
+        let resetURL: URL?
+
+        if let urlString = deviceResetURL,
+           let url = URL(string: urlString), url.host != nil,
+           let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https"
         {
-            // Validate reset URL at startup if provided
-            let resetURL: URL?
-
-            if let urlString = deviceResetURL,
-               let url = URL(string: urlString), url.host != nil,
-               let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https"
-            {
-                JLog.notice("Device reset URL configured: \(urlString)")
-                resetURL = url
-            }
-            else
-            {
-                resetURL = nil
-            }
-
-            let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
-
-            let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
-            {
-                try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
-            }
-            else
-            {
-                try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
-            }
-
-            try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, resetURL: resetURL, options: self)
+            JLog.notice("Device reset URL configured: \(urlString)")
+            resetURL = url
         }
-        catch
+        else
         {
-            JLog.error("Got error:\(error)")
+            resetURL = nil
+        }
+
+        _ = try fileURLFromPath(path: deviceDescriptionFile)
+
+        let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
+
+        while !Task.isCancelled
+        {
+            do
+            {
+                let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
+                {
+                    try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
+                }
+                else
+                {
+                    try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
+                }
+
+                try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, resetURL: resetURL, options: self)
+            }
+            catch
+            {
+                JLog.error("Serving failed:\(error)")
+            }
+
+            guard !Task.isCancelled
+            else
+            {
+                break
+            }
+
+            JLog.notice("Restarting service in \(serviceRestartDelay) seconds")
+            try? await Task.sleep(nanoseconds: UInt64(serviceRestartDelay * Double(NSEC_PER_SEC)))
         }
     }
-}
-
-enum ValidationError: Error
-{
-    case invalidResetURL(String)
 }
 
 func handleSIGUSR1(signal: Int32)
@@ -192,7 +200,6 @@ func callResetURL(_ url: URL) async throws
     }
 }
 
-@MainActor
 func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
@@ -211,7 +218,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
     }
     let mqttClient = MQTTClient(configuration: .init(target: .host(mqttServer.server.hostname, port: Int(mqttServer.server.port)),
                                                      credentials: credentials),
-                                eventLoopGroupProvider: .createNew)
+                                eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
     try await mqttClient.connect()
 
     guard mqttClient.isConnected
@@ -226,7 +233,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
     try await mqttClient.subscribe(to: requestPath + "/#")
 
     let staticDefinitions = modbusDefinitions.values
-    Task
+    let requestTask = Task
     {
         var knownRequests = Set<MQTTRequest>()
         let requestTTL = options.mqttRequestTTL
@@ -365,8 +372,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
                 {
                     try await mqttClient.publish(MQTTMessage(topic: responseTopic,
                                                              payload: jsonString,
-                                                             retain: false)
-                    )
+                                                             retain: false))
                 }
             }
             else
@@ -376,6 +382,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
         }
         // only when error
     }
+    defer { requestTask.cancel() }
 
     var errorCounter = 0
 
@@ -493,8 +500,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
                 let topic = "\(mqttServer.topic)/\(mbd.topic)"
                 try await mqttClient.publish(MQTTMessage(topic: topic,
                                                          payload: payload.json,
-                                                         retain: retained)
-                )
+                                                         retain: retained))
             }
             let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)
             modbusDefinitions[mbd.address]!.nextReadDate = nextReadDate

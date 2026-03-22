@@ -4,15 +4,26 @@
 
 import Foundation
 
-public enum MQTTCommandValue: Hashable, Equatable
+public enum MQTTCommandValue: Hashable, Equatable, Sendable
 {
     case string(String)
     case decimal(Decimal)
     case bool(Bool)
 
-    public init(_ value: String) { self = .string(value) }
-    public init(_ value: Decimal) { self = .decimal(value) }
-    public init(_ value: Bool) { self = .bool(value) }
+    public init(_ value: String)
+    {
+        self = .string(value)
+    }
+
+    public init(_ value: Decimal)
+    {
+        self = .decimal(value)
+    }
+
+    public init(_ value: Bool)
+    {
+        self = .bool(value)
+    }
 }
 
 extension MQTTCommandValue: Codable
@@ -38,7 +49,7 @@ extension MQTTCommandValue: Codable
     }
 }
 
-public struct MQTTRequest
+public struct MQTTRequest: Sendable
 {
     public let date: Date
     public let id: UUID
@@ -72,7 +83,7 @@ extension MQTTRequest: Hashable
     }
 }
 
-public struct MQTTResponse
+public struct MQTTResponse: Sendable
 {
     public let date: Date
     public let id: UUID

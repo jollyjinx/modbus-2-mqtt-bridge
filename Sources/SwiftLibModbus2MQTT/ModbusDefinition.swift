@@ -5,6 +5,7 @@
 import Foundation
 import JLog
 import SwiftLibModbus
+import Synchronization
 
 public enum MQTTVisibilty: String, Encodable, Decodable, Sendable
 {
@@ -147,18 +148,21 @@ extension ModbusDefinition
 
 public extension ModbusDefinition
 {
-    var hasFactor: Bool { factor != nil && factor! != 0 && factor! != 1 }
+    var hasFactor: Bool
+    {
+        factor != nil && factor! != 0 && factor! != 1
+    }
 }
 
-private final class ModbusDefinitionStore: @unchecked Sendable
+@available(macOS 15.0, iOS 18.0, *)
+private final class ModbusDefinitionStore: Sendable
 {
-    let userMutatingLock = DispatchQueue(label: "definitions.lock.queue." + UUID().uuidString)
-    private var _modbusDefinitions: [Int: ModbusDefinition] = [:]
+    private let definitionsLock = Mutex<[Int: ModbusDefinition]>([:])
 
     var definitions: [Int: ModbusDefinition]
     {
-        get { userMutatingLock.sync { _modbusDefinitions } }
-        set { userMutatingLock.sync { _modbusDefinitions = newValue } }
+        get { definitionsLock.withLock { $0 } }
+        set { definitionsLock.withLock { $0 = newValue } }
     }
 
     init()

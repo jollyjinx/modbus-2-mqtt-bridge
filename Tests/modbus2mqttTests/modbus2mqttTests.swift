@@ -3,16 +3,12 @@
 //
 
 import Foundation
-import JLog
-import SwiftLibModbus
 import SwiftLibModbus2MQTT
-import Testing
+import XCTest
 
-@Suite("Modbus Tests")
-struct modbus2mqttTests
+final class Modbus2mqttTests: XCTestCase
 {
-    @Test
-    func BrokenJSONDefinition() async throws
+    func testBrokenJSONDefinition() throws
     {
         let testJSON = """
         [
@@ -44,14 +40,13 @@ struct modbus2mqttTests
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        #expect(throws: (any Error).self)
+        XCTAssertThrowsError(try
         {
-            let definitions = try ModbusDefinition.read(from: url)
-        }
+            _ = try ModbusDefinition.read(from: url)
+        }())
     }
 
-    @Test
-    func BitMapValues() async throws
+    func testBitMapValues() throws
     {
         let testJSON = """
         [
@@ -78,11 +73,10 @@ struct modbus2mqttTests
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let definitions = try ModbusDefinition.read(from: url)
+        XCTAssertNoThrow(_ = try ModbusDefinition.read(from: url))
     }
 
-    @Test
-    func DecodingInt8() async throws
+    func testDecodingInt8() throws
     {
         let testJSON = """
         [
@@ -113,8 +107,7 @@ struct modbus2mqttTests
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let definitions = try ModbusDefinition.read(from: url)
-
-        let modbusValue = ModbusValue(address: 1, value: .uint32(0b1111111))
+        _ = try ModbusDefinition.read(from: url)
+        XCTAssertEqual(ModbusValue(address: 1, value: .uint32(0b1111111)).stringValue, "127")
     }
 }

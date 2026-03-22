@@ -221,7 +221,7 @@ Some Modbus devices may stop responding due to firmware issues, network problems
 - The URL typically triggers a device reboot (e.g., via a smart power switch, relay, or device management interface)
 - After calling the reset URL, it waits 60 seconds for the device to reboot
 - Communication attempts resume automatically
-- If errors continue beyond 10 failures, the application exits
+- If errors continue beyond 10 failures, the current communication session is restarted after a short delay instead of exiting the application
 
 **Example use cases:**
 ```bash
