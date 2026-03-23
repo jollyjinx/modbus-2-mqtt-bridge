@@ -2,6 +2,7 @@ FROM swift:latest AS modbus2mqttbuilder
 WORKDIR /swift
 ENV SWIFTPM_BUILD_TESTS=false
 COPY Sources Sources
+COPY Tests Tests
 COPY DeviceDefinitions DeviceDefinitions
 COPY Package.swift Package.swift
 RUN swift build -v -c release --product modbus2mqtt 
