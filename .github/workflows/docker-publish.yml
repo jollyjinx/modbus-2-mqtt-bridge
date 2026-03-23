@@ -15,7 +15,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       
     steps:
@@ -51,6 +51,7 @@ jobs:
             type=semver,pattern={{version}}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -61,3 +62,64 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Prepare release metadata
+        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+        id: release
+        run: |
+          set -euo pipefail
+
+          prerelease=false
+          case "${GITHUB_REF_NAME}" in
+            development|*alpha*|*beta*|*gamma*) prerelease=true ;;
+          esac
+
+          echo "prerelease=${prerelease}" >> "$GITHUB_OUTPUT"
+
+      - name: Write release asset metadata
+        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+
+          {
+            echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+            echo "Release ref: ${{ github.ref_name }}"
+            echo "Digest: ${{ steps.build.outputs.digest }}"
+            echo
+            echo "Published tags:"
+            printf '%s\n' '${{ steps.meta.outputs.tags }}' | sed 's/^/  /'
+          } > DOCKER-IMAGE.txt
+
+      - name: Create or update GitHub release
+        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          tag_name="${GITHUB_REF_NAME}"
+          prerelease_flag=()
+
+          if [ "${{ steps.release.outputs.prerelease }}" = "true" ]; then
+            prerelease_flag+=(--prerelease)
+          fi
+
+          if gh release view "${tag_name}" >/dev/null 2>&1; then
+            gh release edit "${tag_name}" \
+              --title "${tag_name}" \
+              --notes-file DOCKER-IMAGE.txt \
+              "${prerelease_flag[@]}"
+            gh release upload "${tag_name}" DOCKER-IMAGE.txt --clobber
+          elif [[ "${GITHUB_REF}" == refs/heads/development ]]; then
+            gh release create "${tag_name}" DOCKER-IMAGE.txt \
+              --target "${GITHUB_SHA}" \
+              --title "${tag_name}" \
+              --notes-file DOCKER-IMAGE.txt \
+              "${prerelease_flag[@]}"
+          else
+            gh release create "${tag_name}" DOCKER-IMAGE.txt \
+              --verify-tag \
+              --title "${tag_name}" \
+              --notes-file DOCKER-IMAGE.txt \
+              "${prerelease_flag[@]}"
+          fi
