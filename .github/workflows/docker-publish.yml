@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Publish Docker Image
 
 on:
   push:
@@ -6,7 +6,12 @@ on:
       - main
       - development
     tags:
-      - '*.*.*'  # Matches tags like 1.2.3, 2.2.1, etc.
+      - "*.*.*"
+      - "*.*.*-*"
+      - "v*.*.*"
+      - "v*.*.*-*"
+      - "beta"
+      - "development"
 
 env:
   REGISTRY: ghcr.io
@@ -17,13 +22,13 @@ jobs:
     permissions:
       contents: write
       packages: write
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
       - name: Set image name to lowercase
-        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -38,17 +43,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Branch builds: main -> latest, development -> development
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=development,enable=${{ github.ref == 'refs/heads/development' }}
-            # Version tags: 1.2.3 -> 1.2.3
-            type=semver,pattern={{version}}
+            type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=development,enable=${{ github.ref == 'refs/heads/development' || github.ref == 'refs/tags/development' || contains(github.ref_name, '-development') }}
+            type=raw,value=beta,enable=${{ github.ref == 'refs/tags/beta' || contains(github.ref_name, '-beta') }}
+            type=semver,pattern={{version}},value=${{ github.ref_name }},enable=${{ startsWith(github.ref, 'refs/tags/') && github.ref_name != 'beta' && github.ref_name != 'development' }}
 
       - name: Build and push Docker image
         id: build
@@ -64,7 +69,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Prepare release metadata
-        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         id: release
         run: |
           set -euo pipefail
@@ -77,13 +82,13 @@ jobs:
           echo "prerelease=${prerelease}" >> "$GITHUB_OUTPUT"
 
       - name: Write release asset metadata
-        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -euo pipefail
 
           {
             echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
-            echo "Release ref: ${{ github.ref_name }}"
+            echo "Release tag: ${{ github.ref_name }}"
             echo "Digest: ${{ steps.build.outputs.digest }}"
             echo
             echo "Published tags:"
@@ -91,35 +96,14 @@ jobs:
           } > DOCKER-IMAGE.txt
 
       - name: Create or update GitHub release
-        if: github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          tag_name="${GITHUB_REF_NAME}"
-          prerelease_flag=()
-
-          if [ "${{ steps.release.outputs.prerelease }}" = "true" ]; then
-            prerelease_flag+=(--prerelease)
-          fi
-
-          if gh release view "${tag_name}" >/dev/null 2>&1; then
-            gh release edit "${tag_name}" \
-              --title "${tag_name}" \
-              --notes-file DOCKER-IMAGE.txt \
-              "${prerelease_flag[@]}"
-            gh release upload "${tag_name}" DOCKER-IMAGE.txt --clobber
-          elif [[ "${GITHUB_REF}" == refs/heads/development ]]; then
-            gh release create "${tag_name}" DOCKER-IMAGE.txt \
-              --target "${GITHUB_SHA}" \
-              --title "${tag_name}" \
-              --notes-file DOCKER-IMAGE.txt \
-              "${prerelease_flag[@]}"
-          else
-            gh release create "${tag_name}" DOCKER-IMAGE.txt \
-              --verify-tag \
-              --title "${tag_name}" \
-              --notes-file DOCKER-IMAGE.txt \
-              "${prerelease_flag[@]}"
-          fi
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ steps.release.outputs.prerelease == 'true' }}
+          body_path: DOCKER-IMAGE.txt
+          overwrite_files: true
+          files: |
+            DOCKER-IMAGE.txt
