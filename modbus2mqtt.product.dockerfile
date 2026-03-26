@@ -1,4 +1,4 @@
-FROM swift:latest AS modbus2mqttbuilder
+FROM swift:6.3 AS modbus2mqttbuilder
 WORKDIR /swift
 ENV SWIFTPM_BUILD_TESTS=false
 COPY Sources Sources
@@ -8,7 +8,7 @@ COPY Package.swift Package.swift
 RUN swift build -v -c release --product modbus2mqtt 
 RUN chmod -R u+rwX,go+rX-w /swift/.build/release/
 
-FROM swift:slim
+FROM swift:6.3-slim
 WORKDIR /modbus2mqtt
 ENV PATH="$PATH:/modbus2mqtt"
 COPY --from=modbus2mqttbuilder /swift/.build/release/modbus2mqtt .

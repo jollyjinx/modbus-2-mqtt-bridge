@@ -4,11 +4,13 @@
 
 import Foundation
 import SwiftLibModbus2MQTT
-import XCTest
+import Testing
 
-final class Modbus2mqttTests: XCTestCase
+@Suite
+struct Modbus2mqttTests
 {
-    func testBrokenJSONDefinition() throws
+    @Test
+    func brokenJSONDefinition() throws
     {
         let testJSON = """
         [
@@ -40,13 +42,14 @@ final class Modbus2mqttTests: XCTestCase
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        XCTAssertThrowsError(try
+        #expect(throws: (any Error).self)
         {
-            _ = try ModbusDefinition.read(from: url)
-        }())
+            try ModbusDefinition.read(from: url)
+        }
     }
 
-    func testBitMapValues() throws
+    @Test
+    func bitMapValues() throws
     {
         let testJSON = """
         [
@@ -73,10 +76,11 @@ final class Modbus2mqttTests: XCTestCase
         try testJSON.write(to: url, atomically: true, encoding: .utf8)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        XCTAssertNoThrow(_ = try ModbusDefinition.read(from: url))
+        _ = try ModbusDefinition.read(from: url)
     }
 
-    func testDecodingInt8() throws
+    @Test
+    func decodingInt8() throws
     {
         let testJSON = """
         [
@@ -108,6 +112,6 @@ final class Modbus2mqttTests: XCTestCase
         defer { try? FileManager.default.removeItem(at: url) }
 
         _ = try ModbusDefinition.read(from: url)
-        XCTAssertEqual(ModbusValue(address: 1, value: .uint32(0b1111111)).stringValue, "127")
+        #expect(ModbusValue(address: 1, value: .uint32(0b1111111)).stringValue == "127")
     }
 }

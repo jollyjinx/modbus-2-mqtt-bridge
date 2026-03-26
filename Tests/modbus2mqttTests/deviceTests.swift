@@ -5,14 +5,14 @@
 import Foundation
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
-import XCTest
+import Testing
 
-final class DeviceTests: XCTestCase
+@Suite
+struct DeviceTests
 {
-    func testReverseEngineerHM310T() async throws
+    @Test(.disabled("Only works when attached"))
+    func reverseEngineerHM310T() async throws
     {
-        try XCTSkipIf(true, "Only works when attached")
-
         // Prints out modbus address ranges and compares them to the last time
 
         let modbusDevice = try ModbusDevice(device: "/dev/tty.usbserial-42340", baudRate: 9600)
@@ -52,10 +52,9 @@ final class DeviceTests: XCTestCase
         }
     }
 
-    func testFloat32PhoenixController() async throws
+    @Test(.disabled("Only works when attached"))
+    func float32PhoenixController() async throws
     {
-        try XCTSkipIf(true, "Only works when attached")
-
         // Prints out modbus address ranges and compares them to the last time
 
         let modbusDevice = try ModbusDevice(networkAddress: "10.98.16.12", port: 502, deviceAddress: 180)
