@@ -21,7 +21,7 @@ let package = Package(name: "modbus2mqtt",
                           .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.6.2")),
                           .package(url: "https://github.com/sroebert/mqtt-nio.git", from: "2.8.0"),
                           .package(url: "https://github.com/jollyjinx/JLog", .upToNextMajor(from: "0.0.9")),
-                          .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from: "2.0.2"),
+                          .package(url: "https://github.com/jollyjinx/SwiftLibModbus", from: "2.1.0"),
                       ],
                       targets: [
                           .executableTarget(name: "modbus2mqtt",
