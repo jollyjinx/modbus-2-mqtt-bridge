@@ -510,6 +510,14 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
         {
             errorCounter += 1
 
+            // Force the next retry to start from a fresh Modbus socket instead of
+            // relying on libmodbus recovery against a potentially stale session.
+            if let modbusError = error as? ModbusError
+            {
+                JLog.warning("Resetting Modbus connection after error: \(modbusError)")
+                await modbusDevice.disconnect()
+            }
+
             // Try to reset device if configured and error threshold reached
             if errorCounter == 7, let url = resetURL
             {
