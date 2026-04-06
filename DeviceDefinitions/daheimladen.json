@@ -405,7 +405,7 @@
     "valuetype": "uint16",
     "map": {
         "1": "Einphasig",
-        "2": "Dreiphasig",
+        "3": "Dreiphasig",
     },
     "interval": 30,
     "mqtt": "visible",
@@ -419,7 +419,7 @@
     "valuetype": "uint16",
     "map": {
         "1": "Wechsel zu Einphasig",
-        "2": "Wechsel zu Dreiphasig",
+        "3": "Wechsel zu Dreiphasig",
     },
     "interval": 30,
     "mqtt": "visible",
