@@ -218,15 +218,35 @@
     "topic": "device/daheimlader_charged_energy",
     "title": "Geladene Energie"
   },
-    {
+  {
     "address": 74,
     "modbustype": "holding",
     "modbusaccess": "read",
     "valuetype": "uint16",
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimlader_charging_starttime",
-    "title": "Startzeit der Ladung"
+    "topic": "device/daheimlader_charging_starttime_hours",
+    "title": "Startzeit der Ladung Stunden"
+  },
+  {
+    "address": 75,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_starttime_minutes",
+    "title": "Startzeit der Ladung Minuten"
+  },
+  {
+    "address": 76,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_starttime_seconds",
+    "title": "Startzeit der Ladung Sekunden"
   },
   {
     "address": 78,
@@ -245,8 +265,28 @@
     "valuetype": "uint16",
     "interval": 30,
     "mqtt": "visible",
-    "topic": "device/daheimlader_charging_endtime",
-    "title": "Endzeit der Ladung"
+    "topic": "device/daheimlader_charging_endtime_hours",
+    "title": "Endzeit der Ladung Stunden"
+  },
+  {
+    "address": 83,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_endtime_minutes",
+    "title": "Endzeit der Ladung Minuten"
+  },
+  {
+    "address": 84,
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint16",
+    "interval": 30,
+    "mqtt": "visible",
+    "topic": "device/daheimlader_charging_endtime_seconds",
+    "title": "Endzeit der Ladung Sekunden"
   },
   {
     "address": 87,
@@ -365,7 +405,7 @@
     "valuetype": "uint16",
     "map": {
         "1": "Einphasig",
-        "2": "Dreiphasig",
+        "3": "Dreiphasig",
     },
     "interval": 30,
     "mqtt": "visible",
@@ -379,7 +419,7 @@
     "valuetype": "uint16",
     "map": {
         "1": "Wechsel zu Einphasig",
-        "2": "Wechsel zu Dreiphasig",
+        "3": "Wechsel zu Dreiphasig",
     },
     "interval": 30,
     "mqtt": "visible",
