@@ -18,12 +18,14 @@ It comes with json definition files for:
 
 You can easily add json definition files for your own devices. All device definitions are available in the [`DeviceDefinitions/`](DeviceDefinitions/) directory.
 
-## Docker Container Use
+Additional implementation documentation is available in [`DOCUMENTATION.md`](DOCUMENTATION.md). Agent-oriented documentation files use YAML front matter; this README intentionally stays plain Markdown for GitHub.
 
-Docker images are available for both **AMD64** (x86_64) and **ARM64** (aarch64) architectures. These multi-architecture images are compatible with a wide range of devices, including x86 servers, Raspberry Pi, Apple Silicon Macs, and other ARM-based computers. The image can be used directly with the following command:
+## Container Use
+
+Container images are available for both **AMD64** (x86_64) and **ARM64** (aarch64) architectures. These multi-architecture images are compatible with a wide range of devices, including x86 servers, Raspberry Pi, Apple Silicon Macs, and other ARM-based computers. The image can be used directly with the following command:
 
 ```
-	docker run --name modbus2mqtt \
+	container run --name modbus2mqtt \
 		ghcr.io/jollyjinx/modbus-2-mqtt-bridge:latest modbus2mqtt \
 		--modbus-server lambda \
 		--mqtt-servername=mqtt.local \
@@ -37,11 +39,11 @@ This will look like the following on *MQTT Explorer* or in *node-red*:
 
 <img src="Images/mqtt-explorer.png" width="70%" alt="MQTT Explorer Screenshot"/><img src="Images/lambda-node-red.png" width="20%" alt="MQTT Explorer Screenshot"/>
 
-You can create your own docker container by using the following command:
+You can create your own container image by using the following command:
 
 ```
-    docker build . --file modbus2mqtt.product.dockerfile --tag modbus2mqtt
-    docker run --name modbus2mqtt modbus2mqtt --modbus-server lambda --device-description-file lambda.json --topic lambda
+    container build . --file modbus2mqtt.product.dockerfile --tag modbus2mqtt
+    container run --name modbus2mqtt modbus2mqtt --modbus-server lambda --device-description-file lambda.json --topic lambda
 ```
 
 ## JSON Definition Files

@@ -1,61 +1,68 @@
+---
+title: "modbus2mqtt Documentation"
+description: "Agent-oriented documentation index for the modbus2mqtt Swift package."
+audience:
+  - agents
+  - maintainers
+status: "active"
+entry_point: true
+front_matter_required: true
+related:
+  - "README.md"
+  - "docs/architecture.md"
+  - "docs/device-definitions.md"
+  - "docs/mqtt-request-response.md"
+  - "docs/documentation-style.md"
+---
 
 # modbus2mqtt Documentation
 
-## Introduction
+This file is the agent-oriented documentation entry point for **modbus2mqtt**. The project README remains plain Markdown for GitHub users, while this file and the topic files under `docs/` use YAML front matter so agents can classify, route, and search documentation consistently.
 
-modbus2mqtt is a bidirectional bridge that connects Modbus devices to an MQTT broker. It allows you to monitor and control Modbus devices using MQTT, a lightweight messaging protocol ideal for IoT applications.
+## Front Matter Convention
 
-The project is written in Swift and can be run on macOS and Linux. It is highly configurable and can be adapted to work with a wide range of Modbus devices by creating custom JSON device definition files.
+All agent-oriented documentation files should start with YAML front matter:
 
-## Architecture
+```yaml
+---
+title: "Short Human Title"
+description: "One sentence describing the file's purpose."
+audience:
+  - agents
+  - maintainers
+status: "active"
+related:
+  - "README.md"
+---
+```
 
-The project is divided into two main components:
+Use the front matter to describe the file before the Markdown body begins. Keep `README.md` as plain Markdown unless the project intentionally changes how it is presented on GitHub.
 
-*   **`modbus2mqtt` executable:** This is the main application that you run from the command line. It handles command-line argument parsing, sets up the Modbus and MQTT connections, and manages the main application loop.
-*   **`SwiftLibModbus2MQTT` library:** This library contains the core logic for the Modbus-to-MQTT bridge. It is responsible for:
-    *   Reading and parsing JSON device definition files.
-    *   Connecting to the Modbus device and the MQTT broker.
-    *   Reading data from Modbus registers and publishing it to MQTT topics.
-    *   Subscribing to MQTT topics for write requests and writing data to Modbus registers.
-    *   Handling data type conversions and value mapping.
+## Documentation Map
 
-### Key Data Structures
+- [Architecture](docs/architecture.md): package layout, runtime flow, and important types.
+- [Device Definitions](docs/device-definitions.md): JSON device definition format and bundled device files.
+- [MQTT Request/Response](docs/mqtt-request-response.md): write flow for Modbus values through MQTT.
+- [Documentation Style](docs/documentation-style.md): rules for adding or changing documentation files.
 
-The following are the key data structures used in the `SwiftLibModbus2MQTT` library:
+## Project Summary
 
-*   **`ModbusDefinition`**: This struct represents a single Modbus register definition from a JSON device description file. It contains all the information needed to interact with that register, such as its address, data type, and MQTT topic.
-*   **`ModbusValue`**: This struct represents a value read from a Modbus device. It includes the raw value as well as information about how to format it for publishing to MQTT.
-*   **`MQTTRequest` and `MQTTResponse`**: These structs are used for the request/response pattern that allows writing data to Modbus devices via MQTT.
-*   **`MQTTServer` and `MQTTDevice`**: These structs store the configuration for the MQTT broker and the Modbus device.
-*   **`BitMapValues`**: This struct provides functionality for handling bit-mapped values, where individual bits or ranges of bits within a larger integer value have specific meanings.
+`modbus2mqtt` is a bidirectional bridge that connects Modbus devices to an MQTT broker. It monitors Modbus registers, publishes values to MQTT topics, and accepts MQTT write requests that are translated back into Modbus writes.
 
-## How it Works
+The project is written in Swift and runs on macOS and Linux. It is configured through command-line options and JSON device definition files.
 
-1.  **Initialization:**
-    *   The `modbus2mqtt` executable is launched with command-line arguments that specify the MQTT broker, the Modbus device, and the JSON device definition file to use.
-    *   The application reads the device definition file and creates a dictionary of `ModbusDefinition` objects, using the Modbus address as the key.
-    *   It establishes a connection to the MQTT broker and the Modbus device.
+## Main Components
 
-2.  **Reading Data:**
-    *   The application enters a loop that continuously reads data from the Modbus device.
-    *   In each iteration, it determines which Modbus register to read next based on the `interval` specified in the `ModbusDefinition` for each register.
-    *   It reads the value from the Modbus register and creates a `ModbusValue` object.
-    *   The `ModbusValue` is then encoded into a JSON string and published to the appropriate MQTT topic.
-
-3.  **Writing Data:**
-    *   The application subscribes to a specific MQTT topic for write requests.
-    *   When a message is received on this topic, it decodes the JSON payload into an `MQTTRequest` object.
-    *   The `MQTTRequest` contains the topic of the value to be written and the new value.
-    *   The application looks up the corresponding `ModbusDefinition` to determine the Modbus address and data type.
-    *   It then writes the new value to the Modbus register.
-    *   Finally, it publishes an `MQTTResponse` message to a response topic to indicate whether the write operation was successful.
-
-## Device Definition Files
-
-The behavior of `modbus2mqtt` is primarily controlled by the JSON device definition files. These files specify which Modbus registers to read, how often to read them, and how to map them to MQTT topics.
-
-For a detailed explanation of the format of the device definition files, please refer to the [JSON Definition Files](#json-definition-files) section in the `README.md` file.
+- `Sources/modbus2mqtt`: executable entry point, command-line parsing, and long-running bridge loop.
+- `Sources/SwiftLibModbus2MQTT`: shared parsing, Modbus value modelling, MQTT request/response helpers, and runtime bridge support.
+- `DeviceDefinitions`: bundled JSON maps for supported devices.
+- `Tests/modbus2mqttTests`: package tests for decoding and bridge-level behavior.
 
 ## Command-Line Options
 
-The `modbus2mqtt` executable supports a number of command-line options for configuring its behavior. For a complete list of the available options, please run the application with the `--help` flag.
+Run the executable with `--help` for the current command-line options:
+
+```bash
+swift run modbus2mqtt --help
+```
+
