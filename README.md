@@ -10,6 +10,7 @@ It comes with json definition files for:
  - **Hanmatek HM310T** - Laboratory power supply (`hanmatek.hm310t.json`)
  - **Lambda Eureka series** - Heatpumps (EU8L, EU13L, EU15L) (`lambda.json`)
  - **Lambda Solartherm** - Heat pump with solar thermal integration (`lambda.solartherm.json`)
+ - **NIBE S2125** - Air/water heat pump (`nibe.s2125.json`)
  - **Phoenix Contact** - Electric vehicle charge controller (`phoenix.evcharger.json`)
  - **SMA Sunny Boy** - Solar inverter (`sma.sunnyboy.json` / `sma.sunnyboy.all.json`)
  - **SMA Sunny Boy Storage** - Solar inverter with battery storage (`sma.sunnystore.json` / `sma.sunnystore.all.json`)

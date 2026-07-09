@@ -127,4 +127,16 @@ struct Modbus2mqttTests
         #expect(definitions[0x0156]?.topic == "counter/totalactiveenergy")
         #expect(definitions[0xFC00]?.topic == "static/serialnumber")
     }
+
+    @Test
+    func decodingNIBES2125Definition() throws
+    {
+        let url = URL(fileURLWithPath: "DeviceDefinitions/nibe.s2125.json")
+
+        let definitions = try ModbusDefinition.read(from: url)
+
+        #expect(definitions[1]?.topic == "system/outdoortemperature")
+        #expect(definitions[1478]?.topic == "heatpump/supplyline")
+        #expect(definitions[1805]?.map?["1"] == "ACTIVE")
+    }
 }
