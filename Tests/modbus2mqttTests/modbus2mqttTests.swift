@@ -114,4 +114,17 @@ struct Modbus2mqttTests
         _ = try ModbusDefinition.read(from: url)
         #expect(ModbusValue(address: 1, value: .uint32(0b1111111)).stringValue == "127")
     }
+
+    @Test
+    func decodingEastronSDM72DMV2Definition() throws
+    {
+        let url = URL(fileURLWithPath: "DeviceDefinitions/eastron.sdm72dm-v2.json")
+
+        let definitions = try ModbusDefinition.read(from: url)
+
+        #expect(definitions[0x0000]?.valuetype == .float32)
+        #expect(definitions[0x0000]?.topic == "immediate/p1/voltage")
+        #expect(definitions[0x0156]?.topic == "counter/totalactiveenergy")
+        #expect(definitions[0xFC00]?.topic == "static/serialnumber")
+    }
 }

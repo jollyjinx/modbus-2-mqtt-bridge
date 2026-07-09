@@ -35,6 +35,7 @@ public struct ModbusDefinition: Encodable, Sendable
         case int32
         case uint64
         case int64
+        case float32
 
         case string
         case ipv4address

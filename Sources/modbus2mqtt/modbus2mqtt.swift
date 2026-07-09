@@ -445,6 +445,9 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
                 case .int64: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int64]).first!
                     payload = ModbusValue(address: mbd.address, value: .int64(value))
 
+                case .float32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Float32]).first!
+                    payload = ModbusValue(address: mbd.address, value: .float32(value))
+
                 case .string: let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian)
                     payload = ModbusValue(address: mbd.address, value: .string(value))
 
