@@ -4,7 +4,7 @@ description: "Plan for suppressing unchanged non-retained MQTT values while pres
 audience:
   - agents
   - maintainers
-status: "draft"
+status: "active"
 related:
   - "../README.md"
   - "../Sources/modbus2mqtt/modbus2mqtt.swift"
@@ -13,6 +13,21 @@ related:
 ---
 
 # MQTT Unchanged Publish Interval Implementation Plan
+
+## Implementation Status
+
+Implemented on the `multiconnectionbridge` branch in four checkpoints:
+
+- `351bcaf` documents the plan;
+- `7456355` adds the shared publication gate and deterministic tests;
+- `cce0b2a` adds the CLI option, validation, and user documentation;
+- `7b3e85e` integrates the policy into legacy and multi-device polling.
+
+Validation completed with 37 tests passing across 6 suites and a successful
+release build. In a controlled 25-second stress run with ten logical Eastron
+devices and stable mock Modbus values, CPU time fell from `0.61` seconds with
+the legacy interval of `0` to `0.36` seconds with the default 15-second
+heartbeat, a reduction of approximately 41 percent.
 
 ## Goal
 
