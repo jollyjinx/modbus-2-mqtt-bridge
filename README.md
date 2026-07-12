@@ -92,8 +92,8 @@ Lambda heat pump on a separate endpoint:
 
 `port` is optional and defaults to `502`. Device-description paths may name a
 definition bundled with the application, as above, or point to a readable JSON
-file. MQTT broker, credentials, request TTL, retain, and emit interval options
-remain process-wide.
+file. MQTT broker, credentials, request TTL, retain, unchanged-value publication,
+and emit interval options remain process-wide.
 
 Each entry's `topic` is its MQTT base path. Polling values are published below
 that path, for example `counters/heatpump/<definition-topic>`. Write requests
@@ -212,6 +212,23 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
 Remark: Be aware that json does not support comments like in this example.
 After creating your own json definition, you can use it with the commandline option *--device-description-file yourfilename* 
 
+## Unchanged MQTT Updates
+
+By default, unchanged values for non-retained topics are published at most once
+every 15 seconds. Changed values are still published immediately on their next
+configured Modbus poll. Set `--mqtt-unchanged-publish-interval 0` to restore the
+legacy behavior of publishing non-retained values after every poll. The option
+accepts finite, non-negative values only.
+
+This option is independent of `--mqtt-auto-retain-time`, which decides whether
+a topic is automatically retained based on its polling interval. Explicitly
+retained topics keep their retained-message behavior, while a definition with
+`"publishalways": true` continues to publish after every poll.
+
+The interval does not cause extra Modbus reads. An unchanged value is
+republished on the first configured poll after the interval has elapsed, so a
+slowly polled value may be published later than the requested interval.
+
 ## Bridge goes both ways
 
 **modbus2mqtt** is a bridge it does not only allow modbus devices show up in mqtt, it also allows writing values to the modbus devices from mqtt.
@@ -290,6 +307,10 @@ OPTIONS:
   --mqtt-auto-retain-time <mqtt-auto-retain-time>
                           If mqttTopic has a refreshtime larger than this value
                           it will be retained. (default: 10.0)
+  --mqtt-unchanged-publish-interval <mqtt-unchanged-publish-interval>
+                          Maximum interval between unchanged non-retained MQTT
+                          updates; 0 restores publish-every-poll behavior.
+                          (default: 15.0)
   --modbus-device-path <modbus-device-path>
                           Serial Modbus Device path
   --modbus-serial-speed <modbus-serial-speed>

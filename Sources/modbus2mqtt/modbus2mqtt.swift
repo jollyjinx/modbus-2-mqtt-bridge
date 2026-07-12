@@ -25,6 +25,7 @@ private enum ConfigurationError: Error
 {
     case multipleMultiDeviceConfigurationSources
     case multiDeviceConfigurationConflictsWithLegacyDeviceOptions
+    case invalidMQTTUnchangedPublishInterval(Double)
 }
 
 extension JLog.Level: @retroactive ExpressibleByArgument {}
@@ -68,6 +69,9 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "If mqttTopic has a refreshtime larger than this value it will be ratained.")
     var mqttAutoRetainTime: Double = 10.0
 
+    @Option(name: .long, help: "Maximum interval between unchanged non-retained MQTT updates; 0 restores publish-every-poll behavior.")
+    var mqttUnchangedPublishInterval: Double = 15.0
+
     @Option(name: .long, help: "Serial Modbus Device path")
     var modbusDevicePath: String = ""
 
@@ -97,6 +101,12 @@ struct modbus2mqtt: AsyncParsableCommand
 
     func run() async throws
     {
+        guard mqttUnchangedPublishInterval.isFinite, mqttUnchangedPublishInterval >= 0
+        else
+        {
+            throw ConfigurationError.invalidMQTTUnchangedPublishInterval(mqttUnchangedPublishInterval)
+        }
+
         JLog.loglevel = logLevel
         signal(SIGUSR1, SIG_IGN)
         signal(SIGUSR1, handleSIGUSR1)
