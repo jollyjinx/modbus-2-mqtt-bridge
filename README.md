@@ -119,7 +119,7 @@ container run --name modbus2mqtt \
 
 When `--modbus-devices-file` is present, its entries provide the TCP endpoints,
 unit addresses, MQTT base topics, and device definitions; the corresponding
-legacy single-device options are not used. Without it, the existing
+legacy single-device options must not also be supplied. Without it, the existing
 `--modbus-server`, `--modbus-port`, `--modbus-address`, `--topic`,
 `--device-description-file`, and serial-device workflow remains unchanged.
 

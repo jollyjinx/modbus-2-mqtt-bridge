@@ -155,23 +155,28 @@ func startServing(configurations: [ModbusDeviceConfiguration],
     let emitInterval = options.emitInterval
     let mqttAutoRetainTime = options.mqttAutoRetainTime
 
-    try await mqttClient.connect()
-    try await mqttClient.subscribe(to: router.requestSubscriptions)
-    await generation.advance()
+    do
+    {
+        try await mqttClient.connect()
+        try await mqttClient.subscribe(to: router.requestSubscriptions)
+        await generation.advance()
+    }
+    catch
+    {
+        try? await mqttClient.disconnect()
+        for endpoint in endpoints.values
+        {
+            await endpoint.disconnect()
+        }
+        throw error
+    }
 
     let reconnectObserver = mqttClient.whenConnected { _ in
         Task
         {
-            do
-            {
-                try await mqttClient.subscribe(to: router.requestSubscriptions)
-                await generation.advance()
-                JLog.notice("Restored MQTT subscriptions after reconnect")
-            }
-            catch
-            {
-                JLog.error("Could not restore MQTT subscriptions: \(error)")
-            }
+            await restoreSubscriptions(client: mqttClient,
+                                       subscriptions: router.requestSubscriptions,
+                                       generation: generation)
         }
     }
 
@@ -261,10 +266,10 @@ private func poll(device: RuntimeModbusDevice,
 
             if publishAlways || retained == false || retainedMessageCache[definition.topic] != payload.value
             {
-                retainedMessageCache[definition.topic] = payload.value
                 try await mqttClient.publish(MQTTMessage(topic: "\(device.configuration.topic)/\(definition.topic)",
                                                          payload: try payload.json(using: definition),
                                                          retain: retained))
+                retainedMessageCache[definition.topic] = payload.value
             }
 
             definitions[definition.address]!.nextReadDate = definition.interval == 0
@@ -337,7 +342,7 @@ private func serveMQTTRequests(client: MQTTClient,
         {
             let outdated = Date(timeIntervalSinceNow: -requestTTL)
             let tooFarInFuture = Date(timeIntervalSinceNow: requestTTL)
-            var deviceRequests = knownRequests[route.device.topic, default: []]
+            let deviceRequests = knownRequests[route.device.topic, default: []]
 
             guard request.date > outdated else { throw MQTTRequestHandlingError.requestDateOutdated }
             guard request.date < tooFarInFuture else { throw MQTTRequestHandlingError.requestDateInFuture }
@@ -351,13 +356,14 @@ private func serveMQTTRequests(client: MQTTClient,
                                                    definition: definition,
                                                    deviceAddress: UInt16(route.device.modbusAddress))
 
-            deviceRequests = deviceRequests.filter { $0.date >= outdated }
-            deviceRequests.insert(request)
-            knownRequests[route.device.topic] = deviceRequests
             response = MQTTResponse(request: request, success: true)
         }
         catch
         {
+            if error is ModbusError
+            {
+                await runtimeDevice.endpoint.disconnect()
+            }
             JLog.error("Could not handle request for \(route.device.topic): \(error)")
             response = MQTTResponse(request: request, success: false, error: "\(error)")
         }
@@ -373,11 +379,51 @@ private func serveMQTTRequests(client: MQTTClient,
                 try await client.publish(MQTTMessage(topic: route.responseTopic,
                                                      payload: responseString,
                                                      retain: false))
+                let outdated = Date(timeIntervalSinceNow: -requestTTL)
+                var deviceRequests = knownRequests[route.device.topic, default: []]
+                deviceRequests = deviceRequests.filter { $0.date >= outdated }
+                deviceRequests.insert(request)
+                knownRequests[route.device.topic] = deviceRequests
             }
             catch
             {
                 JLog.error("Could not publish MQTT response on \(route.responseTopic): \(error)")
             }
+        }
+    }
+}
+
+private func restoreSubscriptions(client: MQTTClient,
+                                  subscriptions: [String],
+                                  generation: MQTTConnectionGeneration) async
+{
+    var retryDelay: UInt64 = 1
+
+    while Task.isCancelled == false, client.isConnected
+    {
+        do
+        {
+            try await client.subscribe(to: subscriptions)
+            await generation.advance()
+            JLog.notice("Restored MQTT subscriptions after reconnect")
+            return
+        }
+        catch is CancellationError
+        {
+            return
+        }
+        catch
+        {
+            JLog.error("Could not restore MQTT subscriptions; retrying in \(retryDelay) seconds: \(error)")
+            do
+            {
+                try await Task.sleep(nanoseconds: retryDelay * UInt64(NSEC_PER_SEC))
+            }
+            catch
+            {
+                return
+            }
+            retryDelay = min(retryDelay * 2, 30)
         }
     }
 }

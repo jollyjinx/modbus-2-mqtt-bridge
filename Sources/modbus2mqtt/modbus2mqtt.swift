@@ -21,6 +21,11 @@ import SwiftLibModbus2MQTT
 
 private let serviceRestartDelay: TimeInterval = 30
 
+private enum ConfigurationError: Error
+{
+    case multiDeviceFileConflictsWithLegacyDeviceOptions
+}
+
 extension JLog.Level: @retroactive ExpressibleByArgument {}
 #if DEBUG
     let defaultLoglevel: JLog.Level = .debug
@@ -115,6 +120,19 @@ struct modbus2mqtt: AsyncParsableCommand
         let configuredDevices: [ModbusDeviceConfiguration]?
         if let modbusDevicesFile
         {
+            guard topic == "example/modbus2mqttdevice",
+                  modbusDevicePath.isEmpty,
+                  modbusSerialSpeed == 9600,
+                  modbusServer == "modbus.example.com",
+                  modbusPort == 502,
+                  modbusAddress == 3,
+                  deviceDescriptionFile == "sma.sunnyboy.json",
+                  deviceResetURL == nil
+            else
+            {
+                throw ConfigurationError.multiDeviceFileConflictsWithLegacyDeviceOptions
+            }
+
             let configurationURL = URL(fileURLWithPath: modbusDevicesFile)
             let configurationData = try Data(contentsOf: configurationURL)
             let configuration = try JSONDecoder().decode(ModbusDevicesConfiguration.self, from: configurationData)
