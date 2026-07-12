@@ -502,7 +502,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
 
                 let topic = "\(mqttServer.topic)/\(mbd.topic)"
                 try await mqttClient.publish(MQTTMessage(topic: topic,
-                                                         payload: payload.json,
+                                                         payload: try payload.json(using: mbd),
                                                          retain: retained))
             }
             let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)

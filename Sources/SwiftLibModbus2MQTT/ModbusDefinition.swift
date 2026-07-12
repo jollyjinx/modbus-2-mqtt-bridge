@@ -5,7 +5,6 @@
 import Foundation
 import JLog
 import SwiftLibModbus
-import Synchronization
 
 public enum MQTTVisibilty: String, Encodable, Decodable, Sendable
 {
@@ -132,18 +131,7 @@ extension ModbusDefinition
         var modbusDefinitions = try JSONDecoder().decode([ModbusDefinition].self, from: jsonData)
         modbusDefinitions = modbusDefinitions.map { var mbd = $0; mbd.nextReadDate = .distantPast; return mbd }
 
-        let returnValue = try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
-
-        Self.modbusDefinitions = returnValue
-        return returnValue
-    }
-
-    private static let modbusDefinitionStore = ModbusDefinitionStore()
-
-    static var modbusDefinitions: [Int: ModbusDefinition]
-    {
-        get { modbusDefinitionStore.definitions }
-        set { modbusDefinitionStore.definitions = newValue }
+        return try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
     }
 }
 
@@ -153,19 +141,4 @@ public extension ModbusDefinition
     {
         factor != nil && factor! != 0 && factor! != 1
     }
-}
-
-@available(macOS 15.0, iOS 18.0, *)
-private final class ModbusDefinitionStore: Sendable
-{
-    private let definitionsLock = Mutex<[Int: ModbusDefinition]>([:])
-
-    var definitions: [Int: ModbusDefinition]
-    {
-        get { definitionsLock.withLock { $0 } }
-        set { definitionsLock.withLock { $0 = newValue } }
-    }
-
-    init()
-    {}
 }

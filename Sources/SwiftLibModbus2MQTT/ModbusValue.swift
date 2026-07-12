@@ -38,14 +38,14 @@ public struct ModbusValue: Equatable, Sendable
 
 public extension ModbusValue
 {
-    var topic: String
+    func topic(using definition: ModbusDefinition) -> String
     {
-        ModbusDefinition.modbusDefinitions[address]?.topic ?? "address/\(address)"
+        definition.topic
     }
 
-    var mqttVisibility: MQTTVisibilty
+    func mqttVisibility(using definition: ModbusDefinition) -> MQTTVisibilty
     {
-        ModbusDefinition.modbusDefinitions[address]?.mqtt ?? .invisible
+        definition.mqtt
     }
 
     var stringValue: String
@@ -77,19 +77,30 @@ public extension ModbusValue
     }
 }
 
-extension ModbusValue: Encodable
+public extension ModbusValue
 {
-    public var json: String
+    func json(using definition: ModbusDefinition) throws -> String
     {
         let jsonEncoder = JSONEncoder()
         jsonEncoder.outputFormatting = .sortedKeys
-        let jsonData = try! jsonEncoder.encode(self)
-        return String(data: jsonData, encoding: .utf8)!
+        let jsonData = try jsonEncoder.encode(ModbusValuePayload(value: self, definition: definition))
+        guard let json = String(data: jsonData, encoding: .utf8)
+        else
+        {
+            throw EncodingError.invalidValue(jsonData, .init(codingPath: [], debugDescription: "Encoded Modbus payload is not valid UTF-8"))
+        }
+        return json
     }
+}
 
-    public func encode(to encoder: Encoder) throws
+private struct ModbusValuePayload: Encodable
+{
+    let value: ModbusValue
+    let definition: ModbusDefinition
+
+    func encode(to encoder: Encoder) throws
     {
-        let mbd = ModbusDefinition.modbusDefinitions[address]!
+        let mbd = definition
 
         enum CodingKeys: String, CodingKey
         {
@@ -113,10 +124,10 @@ extension ModbusValue: Encodable
 
         if let map = mbd.map
         {
-            let string = map[stringValue] ?? stringValue
+            let string = map[value.stringValue] ?? value.stringValue
             try container.encode(string, forKey: .value)
 
-            switch value
+            switch value.value
             {
                 case let .bool(value): try container.encode(value, forKey: .rawValue)
 
@@ -143,7 +154,7 @@ extension ModbusValue: Encodable
         }
         else
         {
-            switch value
+            switch value.value
             {
                 case let .bool(value): try container.encode(value, forKey: .value)
 

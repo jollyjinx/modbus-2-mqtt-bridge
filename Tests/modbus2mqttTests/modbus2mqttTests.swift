@@ -116,6 +116,38 @@ struct Modbus2mqttTests
     }
 
     @Test
+    func payloadEncodingUsesItsExplicitDefinition() throws
+    {
+        let firstURL = try temporaryDefinitionFile(title: "First meter",
+                                                   topic: "meters/first",
+                                                   unit: "A",
+                                                   mappedValue: "running")
+        let secondURL = try temporaryDefinitionFile(title: "Second meter",
+                                                    topic: "meters/second",
+                                                    unit: "W",
+                                                    mappedValue: "active")
+        defer
+        {
+            try? FileManager.default.removeItem(at: firstURL)
+            try? FileManager.default.removeItem(at: secondURL)
+        }
+
+        let firstDefinitions = try ModbusDefinition.read(from: firstURL)
+        let secondDefinitions = try ModbusDefinition.read(from: secondURL)
+        let firstDefinition = try #require(firstDefinitions[1])
+        let secondDefinition = try #require(secondDefinitions[1])
+        let value = ModbusValue(address: 1, value: .uint16(1))
+
+        let firstJSON = try value.json(using: firstDefinition)
+        let secondJSON = try value.json(using: secondDefinition)
+
+        #expect(firstJSON == #"{"address":1,"rawValue":1,"title":"First meter","unit":"A","value":"running"}"#)
+        #expect(secondJSON == #"{"address":1,"rawValue":1,"title":"Second meter","unit":"W","value":"active"}"#)
+        #expect(value.topic(using: firstDefinition) == "meters/first")
+        #expect(value.topic(using: secondDefinition) == "meters/second")
+    }
+
+    @Test
     func decodingEastronSDM72DMV2Definition() throws
     {
         let url = URL(fileURLWithPath: "DeviceDefinitions/eastron.sdm72dm-v2.json")
@@ -138,5 +170,32 @@ struct Modbus2mqttTests
         #expect(definitions[1]?.topic == "system/outdoortemperature")
         #expect(definitions[1478]?.topic == "heatpump/supplyline")
         #expect(definitions[1805]?.map?["1"] == "ACTIVE")
+    }
+
+    private func temporaryDefinitionFile(title: String,
+                                         topic: String,
+                                         unit: String,
+                                         mappedValue: String) throws -> URL
+    {
+        let json = """
+        [
+            {
+                "address": 1,
+                "modbustype": "holding",
+                "modbusaccess": "read",
+                "valuetype": "uint16",
+                "unit": "\(unit)",
+                "map": { "1": "\(mappedValue)" },
+                "mqtt": "visible",
+                "interval": 10,
+                "topic": "\(topic)",
+                "title": "\(title)"
+            }
+        ]
+        """
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "ModbusDefinitions-\(UUID().uuidString).json")
+        try json.write(to: url, atomically: true, encoding: .utf8)
+        return url
     }
 }
