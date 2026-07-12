@@ -47,6 +47,16 @@ public struct ModbusDevicesConfiguration: Decodable, Sendable
             {
                 throw ModbusDevicesConfigurationError.duplicateLogicalDevice(endpoint: device.endpoint, modbusAddress: device.modbusAddress)
             }
+
+        }
+
+        for (endpoint, endpointDevices) in Dictionary(grouping: devices, by: \.endpoint)
+        {
+            guard Set(endpointDevices.map(\.deviceResetURL)).count <= 1
+            else
+            {
+                throw ModbusDevicesConfigurationError.conflictingResetURLs(endpoint: endpoint)
+            }
         }
     }
 }
@@ -73,7 +83,8 @@ public struct ModbusDeviceConfiguration: Decodable, Sendable, Equatable
                 deviceResetURL: String? = nil) throws
     {
         let networkAddress = networkAddress.trimmingCharacters(in: .whitespacesAndNewlines)
-        let topic = topic.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let topic = topic.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let deviceDescriptionFile = deviceDescriptionFile.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard networkAddress.isEmpty == false
@@ -95,6 +106,19 @@ public struct ModbusDeviceConfiguration: Decodable, Sendable, Equatable
         else
         {
             throw ModbusDevicesConfigurationError.emptyDeviceDescriptionFile
+        }
+
+
+        if let deviceResetURL
+        {
+            guard let url = URL(string: deviceResetURL),
+                  url.host != nil,
+                  let scheme = url.scheme?.lowercased(),
+                  scheme == "http" || scheme == "https"
+            else
+            {
+                throw ModbusDevicesConfigurationError.invalidResetURL(deviceResetURL)
+            }
         }
 
         self.networkAddress = networkAddress
@@ -148,6 +172,8 @@ public enum ModbusDevicesConfigurationError: Error, Equatable
     case emptyDeviceDescriptionFile
     case duplicateTopic(String)
     case duplicateLogicalDevice(endpoint: ModbusEndpointKey, modbusAddress: UInt8)
+    case invalidResetURL(String)
+    case conflictingResetURLs(endpoint: ModbusEndpointKey)
 }
 
 private struct LogicalModbusDeviceKey: Hashable

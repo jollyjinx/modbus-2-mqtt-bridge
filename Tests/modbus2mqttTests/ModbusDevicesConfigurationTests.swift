@@ -79,6 +79,40 @@ struct ModbusDevicesConfigurationTests
         }
     }
 
+    @Test
+    func rejectsConflictingResetURLsForSharedEndpoint() throws
+    {
+        let first = try ModbusDeviceConfiguration(networkAddress: "gateway",
+                                                  modbusAddress: 1,
+                                                  topic: "first",
+                                                  deviceDescriptionFile: "meter.json",
+                                                  deviceResetURL: "http://gateway/reset-one")
+        let second = try ModbusDeviceConfiguration(networkAddress: "gateway",
+                                                   modbusAddress: 2,
+                                                   topic: "second",
+                                                   deviceDescriptionFile: "meter.json",
+                                                   deviceResetURL: "http://gateway/reset-two")
+        let endpoint = ModbusEndpointKey(networkAddress: "gateway", port: 502)
+
+        #expect(throws: ModbusDevicesConfigurationError.conflictingResetURLs(endpoint: endpoint))
+        {
+            try ModbusDevicesConfiguration(devices: [first, second])
+        }
+    }
+
+    @Test
+    func rejectsInvalidResetURL()
+    {
+        #expect(throws: ModbusDevicesConfigurationError.invalidResetURL("not a URL"))
+        {
+            try ModbusDeviceConfiguration(networkAddress: "gateway",
+                                          modbusAddress: 1,
+                                          topic: "counter",
+                                          deviceDescriptionFile: "meter.json",
+                                          deviceResetURL: "not a URL")
+        }
+    }
+
     private func device(address: UInt8, topic: String) throws -> ModbusDeviceConfiguration
     {
         try ModbusDeviceConfiguration(networkAddress: "gateway",
