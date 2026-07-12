@@ -1,0 +1,25 @@
+{
+  "devices": [
+    {
+      "networkAddress": "10.112.1.2",
+      "port": 502,
+      "modbusAddress": 1,
+      "topic": "counters/heatpump",
+      "deviceDescriptionFile": "b+ge-tech.sd100-00b.json"
+    },
+    {
+      "networkAddress": "10.112.1.2",
+      "port": 502,
+      "modbusAddress": 2,
+      "topic": "counters/boiler",
+      "deviceDescriptionFile": "b+ge-tech.sd100-00b.json"
+    },
+    {
+      "networkAddress": "10.112.1.3",
+      "port": 502,
+      "modbusAddress": 1,
+      "topic": "lambda",
+      "deviceDescriptionFile": "lambda.json"
+    }
+  ]
+}

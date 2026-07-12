@@ -47,6 +47,82 @@ You can create your own container image by using the following command:
     container run --name modbus2mqtt modbus2mqtt --modbus-server lambda --device-description-file lambda.json --topic lambda
 ```
 
+## Multiple Modbus Devices in One Process
+
+Use `--modbus-devices-file` to serve several Modbus TCP devices from one
+`modbus2mqtt` process. The process uses one MQTT connection and groups devices
+by `networkAddress` and `port`, creating one Modbus TCP connection for each
+unique endpoint. Multiple Modbus unit addresses behind the same TCP gateway
+therefore share that gateway connection safely.
+
+For example, [`Examples/config/modbus-devices.json`](Examples/config/modbus-devices.json)
+configures two B+G E-Tech meters connected to one Waveshare gateway and one
+Lambda heat pump on a separate endpoint:
+
+```json
+{
+  "devices": [
+    {
+      "networkAddress": "10.112.1.2",
+      "port": 502,
+      "modbusAddress": 1,
+      "topic": "counters/heatpump",
+      "deviceDescriptionFile": "b+ge-tech.sd100-00b.json"
+    },
+    {
+      "networkAddress": "10.112.1.2",
+      "port": 502,
+      "modbusAddress": 2,
+      "topic": "counters/boiler",
+      "deviceDescriptionFile": "b+ge-tech.sd100-00b.json"
+    },
+    {
+      "networkAddress": "10.112.1.3",
+      "port": 502,
+      "modbusAddress": 1,
+      "topic": "lambda",
+      "deviceDescriptionFile": "lambda.json"
+    }
+  ]
+}
+```
+
+`port` is optional and defaults to `502`. Device-description paths may name a
+definition bundled with the application, as above, or point to a readable JSON
+file. MQTT broker, credentials, request TTL, retain, and emit interval options
+remain process-wide.
+
+Each entry's `topic` is its MQTT base path. Polling values are published below
+that path, for example `counters/heatpump/<definition-topic>`. Write requests
+and responses preserve any suffix after `request`:
+
+```text
+counters/heatpump/request/change → counters/heatpump/response/change
+counters/boiler/request/change   → counters/boiler/response/change
+lambda/request/change            → lambda/response/change
+```
+
+An optional `deviceResetURL` belongs to the physical endpoint. Every entry
+sharing the same `networkAddress` and `port` must therefore either omit it or
+specify the same URL. A reset of a shared Waveshare gateway affects all Modbus
+units connected through it, and reset attempts are coordinated per endpoint.
+
+Run the example configuration in a container with:
+
+```sh
+container run --name modbus2mqtt \
+  --volume "$PWD/Examples/config:/config:ro" \
+  ghcr.io/jollyjinx/modbus-2-mqtt-bridge:latest modbus2mqtt \
+  --mqtt-servername mqtt.local \
+  --modbus-devices-file /config/modbus-devices.json
+```
+
+When `--modbus-devices-file` is present, its entries provide the TCP endpoints,
+unit addresses, MQTT base topics, and device definitions; the corresponding
+legacy single-device options are not used. Without it, the existing
+`--modbus-server`, `--modbus-port`, `--modbus-address`, `--topic`,
+`--device-description-file`, and serial-device workflow remains unchanged.
+
 ## JSON Definition Files
 
 It's easy to setup your own **modbus2mqtt** definition file. A json definition file looks like this:
@@ -210,6 +286,8 @@ OPTIONS:
   --device-reset-url <device-reset-url>
                           Device Reset URL (HTTP GET) - called when
                           communication fails repeatedly.
+  --modbus-devices-file <modbus-devices-file>
+                          JSON file containing multiple logical Modbus devices.
   -h, --help              Show help information.
 
 ```
