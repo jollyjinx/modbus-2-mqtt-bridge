@@ -401,7 +401,7 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
 
     var errorCounter = 0
 
-    var retainedMessageCache = [String: ModbusType]()
+    var publicationGate = MQTTPublicationGate()
 
     while true
     {
@@ -440,7 +440,7 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
             {
                 JLog.error("No longer connected to mqtt server - reconnecting")
 
-                retainedMessageCache.removeAll()
+                publicationGate.reset()
                 modbusDefinitions.keys.forEach { address in modbusDefinitions[address]!.nextReadDate = .distantPast }
 
                 try await mqttClient.reconnect()
@@ -454,21 +454,27 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
             }
 
             let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
-            let publish = mbd.publishalways ?? false
+            let publishAlways = mbd.publishalways ?? false
+            let publicationDate = Date()
 
-            if !publish, retained,
-               let lastValue = retainedMessageCache[mbd.topic], lastValue == payload.value
+            if publicationGate.shouldPublish(topic: mbd.topic,
+                                               value: payload.value,
+                                               retained: retained,
+                                               publishAlways: publishAlways,
+                                               at: publicationDate,
+                                               unchangedPublishInterval: options.mqttUnchangedPublishInterval)
             {
-                JLog.debug("Value did not change")
-            }
-            else
-            {
-                retainedMessageCache[mbd.topic] = payload.value
-
                 let topic = "\(mqttServer.topic)/\(mbd.topic)"
                 try await mqttClient.publish(MQTTMessage(topic: topic,
                                                          payload: try payload.json(using: mbd),
                                                          retain: retained))
+                publicationGate.recordSuccessfulPublication(topic: mbd.topic,
+                                                             value: payload.value,
+                                                             at: publicationDate)
+            }
+            else
+            {
+                JLog.debug("Value did not change")
             }
             let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)
             modbusDefinitions[mbd.address]!.nextReadDate = nextReadDate

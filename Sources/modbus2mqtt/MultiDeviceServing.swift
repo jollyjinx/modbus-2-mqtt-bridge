@@ -154,6 +154,7 @@ func startServing(configurations: [ModbusDeviceConfiguration],
     let requestTTL = options.mqttRequestTTL
     let emitInterval = options.emitInterval
     let mqttAutoRetainTime = options.mqttAutoRetainTime
+    let mqttUnchangedPublishInterval = options.mqttUnchangedPublishInterval
 
     do
     {
@@ -198,7 +199,8 @@ func startServing(configurations: [ModbusDeviceConfiguration],
                            mqttClient: mqttClient,
                            generation: generation,
                            emitInterval: emitInterval,
-                           mqttAutoRetainTime: mqttAutoRetainTime)
+                           mqttAutoRetainTime: mqttAutoRetainTime,
+                           mqttUnchangedPublishInterval: mqttUnchangedPublishInterval)
             }
         }
 
@@ -217,10 +219,11 @@ private func poll(device: RuntimeModbusDevice,
                   mqttClient: MQTTClient,
                   generation: MQTTConnectionGeneration,
                   emitInterval: Double,
-                  mqttAutoRetainTime: Double) async
+                  mqttAutoRetainTime: Double,
+                  mqttUnchangedPublishInterval: Double) async
 {
     var definitions = device.definitions
-    var retainedMessageCache = [String: ModbusType]()
+    var publicationGate = MQTTPublicationGate()
     var errorCounter = 0
     var observedMQTTGeneration = await generation.current()
     let context = "[\(device.configuration.endpoint) unit=\(device.configuration.modbusAddress) topic=\(device.configuration.topic)]"
@@ -233,7 +236,7 @@ private func poll(device: RuntimeModbusDevice,
             if currentGeneration != observedMQTTGeneration
             {
                 observedMQTTGeneration = currentGeneration
-                retainedMessageCache.removeAll()
+                publicationGate.reset()
                 definitions.keys.forEach { definitions[$0]!.nextReadDate = .distantPast }
             }
 
@@ -263,13 +266,21 @@ private func poll(device: RuntimeModbusDevice,
 
             let retained = definition.mqtt == .retained || definition.interval == 0 || definition.interval > mqttAutoRetainTime
             let publishAlways = definition.publishalways ?? false
+            let publicationDate = Date()
 
-            if publishAlways || retained == false || retainedMessageCache[definition.topic] != payload.value
+            if publicationGate.shouldPublish(topic: definition.topic,
+                                             value: payload.value,
+                                             retained: retained,
+                                             publishAlways: publishAlways,
+                                             at: publicationDate,
+                                             unchangedPublishInterval: mqttUnchangedPublishInterval)
             {
                 try await mqttClient.publish(MQTTMessage(topic: "\(device.configuration.topic)/\(definition.topic)",
                                                          payload: try payload.json(using: definition),
                                                          retain: retained))
-                retainedMessageCache[definition.topic] = payload.value
+                publicationGate.recordSuccessfulPublication(topic: definition.topic,
+                                                             value: payload.value,
+                                                             at: publicationDate)
             }
 
             definitions[definition.address]!.nextReadDate = definition.interval == 0
