@@ -51,6 +51,7 @@ public struct ModbusDefinition: Encodable, Sendable
 
     public let valuetype: ModbusValueType
     public let factor: Decimal?
+    public let resolution: Decimal?
     public let unit: String?
 
     public let map: ValueMap?
@@ -69,7 +70,7 @@ extension ModbusDefinition: Decodable
 {
     enum CodingKeys: String, CodingKey
     {
-        case address, length, modbustype, modbusaccess, endianness, valuetype, factor, unit, map, bits, mqtt, publishalways, interval, topic, title, nextReadDate
+        case address, length, modbustype, modbusaccess, endianness, valuetype, factor, resolution, unit, map, bits, mqtt, publishalways, interval, topic, title, nextReadDate
     }
 
     public init(from decoder: Decoder) throws
@@ -101,6 +102,7 @@ extension ModbusDefinition: Decodable
 
         valuetype = try container.decode(ModbusValueType.self, forKey: .valuetype)
         factor = try? container.decode(Decimal.self, forKey: .factor)
+        resolution = try? container.decode(Decimal.self, forKey: .resolution)
         unit = try? container.decode(String.self, forKey: .unit)
         map = try? container.decode(ValueMap.self, forKey: .map)
 
@@ -140,5 +142,18 @@ public extension ModbusDefinition
     var hasFactor: Bool
     {
         factor != nil && factor! != 0 && factor! != 1
+    }
+
+    var floatResolution: Decimal?
+    {
+        guard valuetype == .float32,
+              let resolution,
+              resolution > 0
+        else
+        {
+            return nil
+        }
+
+        return resolution
     }
 }

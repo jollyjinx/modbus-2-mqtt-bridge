@@ -176,6 +176,19 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
     "title": "Total Yield"
   },
   {
+    "address": 12,
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "resolution": 100,                  // round to the nearest increment before publishing
+                                        // use 0.01 for two decimal places
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/power",
+    "title": "Active Power"
+  },
+  {
     "address": 1,
     "modbustype": "holding",
     "modbusaccess": "read",
@@ -211,6 +224,11 @@ It's easy to setup your own **modbus2mqtt** definition file. A json definition f
 
 Remark: Be aware that json does not support comments like in this example.
 After creating your own json definition, you can use it with the commandline option *--device-description-file yourfilename* 
+
+For `float32` values, an optional positive `resolution` rounds readings to the
+nearest increment before MQTT serialization and change detection. For example,
+`"resolution": 100` rounds `1234.3344` to `1200`, while `"resolution": 0.01`
+rounds to two decimal places. Omitting `resolution` preserves the original value.
 
 ## Unchanged MQTT Updates
 

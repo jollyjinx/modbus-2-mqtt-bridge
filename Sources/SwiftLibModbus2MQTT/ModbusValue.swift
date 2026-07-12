@@ -18,6 +18,7 @@ public enum ModbusType: Equatable, Sendable
     case int32(Int32)
     case int64(Int64)
     case float32(Float32)
+    case decimal(Decimal)
 
     case string(String)
 }
@@ -38,6 +39,23 @@ public struct ModbusValue: Equatable, Sendable
 
 public extension ModbusValue
 {
+    func applyingResolution(using definition: ModbusDefinition) -> ModbusValue
+    {
+        guard case let .float32(value) = value,
+              let resolution = definition.floatResolution,
+              let decimalValue = Decimal(string: String(value), locale: Locale(identifier: "en_US_POSIX"))
+        else
+        {
+            return self
+        }
+
+        var quotient = decimalValue / resolution
+        var roundedQuotient = Decimal()
+        NSDecimalRound(&roundedQuotient, &quotient, 0, .plain)
+
+        return ModbusValue(address: address, value: .decimal(roundedQuotient * resolution))
+    }
+
     func topic(using definition: ModbusDefinition) -> String
     {
         definition.topic
@@ -72,6 +90,8 @@ public extension ModbusValue
 
             case let .float32(value): return String(value)
 
+            case let .decimal(value): return String(describing: value)
+
             case let .string(value): return String(value)
         }
     }
@@ -83,7 +103,7 @@ public extension ModbusValue
     {
         let jsonEncoder = JSONEncoder()
         jsonEncoder.outputFormatting = .sortedKeys
-        let jsonData = try jsonEncoder.encode(ModbusValuePayload(value: self, definition: definition))
+        let jsonData = try jsonEncoder.encode(ModbusValuePayload(value: applyingResolution(using: definition), definition: definition))
         guard let json = String(data: jsonData, encoding: .utf8)
         else
         {
@@ -148,6 +168,8 @@ private struct ModbusValuePayload: Encodable
                 case let .int64(value): try container.encode(value, forKey: .rawValue)
 
                 case let .float32(value): try container.encode(value, forKey: .rawValue)
+
+                case let .decimal(value): try container.encode(value, forKey: .rawValue)
 
                 case let .string(value): try container.encode(value, forKey: .rawValue)
             }
@@ -245,6 +267,8 @@ private struct ModbusValuePayload: Encodable
                     }
 
                 case let .float32(value): try container.encode(value, forKey: .value)
+
+                case let .decimal(value): try container.encode(value, forKey: .value)
 
                 case let .string(value): try container.encode(value, forKey: .value)
             }

@@ -436,6 +436,8 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
 
             JLog.debug("read:\(payload)")
 
+            let publishedPayload = payload.applyingResolution(using: mbd)
+
             if !mqttClient.isConnected
             {
                 JLog.error("No longer connected to mqtt server - reconnecting")
@@ -458,7 +460,7 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
             let publicationDate = Date()
 
             if publicationGate.shouldPublish(topic: mbd.topic,
-                                               value: payload.value,
+                                               value: publishedPayload.value,
                                                retained: retained,
                                                publishAlways: publishAlways,
                                                at: publicationDate,
@@ -466,10 +468,10 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
             {
                 let topic = "\(mqttServer.topic)/\(mbd.topic)"
                 try await mqttClient.publish(MQTTMessage(topic: topic,
-                                                         payload: try payload.json(using: mbd),
+                                                         payload: try publishedPayload.json(using: mbd),
                                                          retain: retained))
                 publicationGate.recordSuccessfulPublication(topic: mbd.topic,
-                                                             value: payload.value,
+                                                             value: publishedPayload.value,
                                                              at: publicationDate)
             }
             else

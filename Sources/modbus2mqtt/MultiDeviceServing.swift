@@ -263,23 +263,24 @@ private func poll(device: RuntimeModbusDevice,
             let payload = try await device.endpoint.read(definition: definition,
                                                          deviceAddress: UInt16(device.configuration.modbusAddress))
             errorCounter = 0
+            let publishedPayload = payload.applyingResolution(using: definition)
 
             let retained = definition.mqtt == .retained || definition.interval == 0 || definition.interval > mqttAutoRetainTime
             let publishAlways = definition.publishalways ?? false
             let publicationDate = Date()
 
             if publicationGate.shouldPublish(topic: definition.topic,
-                                             value: payload.value,
+                                             value: publishedPayload.value,
                                              retained: retained,
                                              publishAlways: publishAlways,
                                              at: publicationDate,
                                              unchangedPublishInterval: mqttUnchangedPublishInterval)
             {
                 try await mqttClient.publish(MQTTMessage(topic: "\(device.configuration.topic)/\(definition.topic)",
-                                                         payload: try payload.json(using: definition),
+                                                         payload: try publishedPayload.json(using: definition),
                                                          retain: retained))
                 publicationGate.recordSuccessfulPublication(topic: definition.topic,
-                                                             value: payload.value,
+                                                             value: publishedPayload.value,
                                                              at: publicationDate)
             }
 
