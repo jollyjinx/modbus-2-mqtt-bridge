@@ -156,8 +156,18 @@ struct Modbus2mqttTests
 
         #expect(definitions[0x0000]?.valuetype == .float32)
         #expect(definitions[0x0000]?.topic == "immediate/p1/voltage")
+        #expect(definitions[0x0000]?.resolution == Decimal(string: "0.5"))
+        #expect(definitions[0x0006]?.resolution == Decimal(string: "0.005"))
+        #expect(definitions[0x000C]?.resolution == 1)
+        #expect(definitions[0x0012]?.resolution == 1)
+        #expect(definitions[0x0018]?.resolution == 1)
+        #expect(definitions[0x001E]?.resolution == Decimal(string: "0.001"))
+        #expect(definitions[0x0046]?.resolution == Decimal(string: "0.01"))
         #expect(definitions[0x0156]?.topic == "counter/totalactiveenergy")
+        #expect(definitions[0x0156]?.resolution == Decimal(string: "0.01"))
+        #expect(definitions[0x0158]?.resolution == Decimal(string: "0.01"))
         #expect(definitions[0xFC00]?.topic == "static/serialnumber")
+        #expect(definitions.values.filter { $0.valuetype == .float32 }.allSatisfy { $0.resolution != nil })
     }
 
     @Test
@@ -169,13 +179,16 @@ struct Modbus2mqttTests
 
         #expect(definitions.count == 8)
         #expect(definitions[0x000C]?.topic == "immediate/p1/power")
+        #expect(definitions[0x000C]?.resolution == 1)
         #expect(definitions[0x000E]?.topic == "immediate/p2/power")
         #expect(definitions[0x0010]?.topic == "immediate/p3/power")
         #expect(definitions[0x0034]?.topic == "immediate/activepower")
         #expect(definitions[0x0156]?.topic == "counter/totalactiveenergy")
+        #expect(definitions[0x0156]?.resolution == Decimal(string: "0.01"))
         #expect(definitions[0xFC00]?.topic == "static/serialnumber")
         #expect(definitions[0xFC02]?.topic == "static/metercode")
         #expect(definitions[0xFC84]?.topic == "static/softwareversion")
+        #expect(definitions.values.filter { $0.valuetype == .float32 }.allSatisfy { $0.resolution != nil })
     }
 
     @Test
