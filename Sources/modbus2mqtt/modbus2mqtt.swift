@@ -126,7 +126,7 @@ struct modbus2mqtt: AsyncParsableCommand
                     try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
                 }
 
-                try await startServing(modbusDevice: modbusDevice, mqttServer: mqttServer, resetURL: resetURL, options: self)
+                try await startServing(modbusDevice: modbusDevice, deviceAddress: modbusAddress, mqttServer: mqttServer, resetURL: resetURL, options: self)
             }
             catch
             {
@@ -200,7 +200,7 @@ func callResetURL(_ url: URL) async throws
     }
 }
 
-func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
+func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
     var modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
@@ -253,7 +253,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
             decoder.dateDecodingStrategy = .iso8601
 
             if let data = message.payload.string?.data(using: .utf8),
-               var request = try? decoder.decode(MQTTRequest.self, from: data)
+               let request = try? decoder.decode(MQTTRequest.self, from: data)
             {
                 JLog.debug("Got Request:\(request)")
                 let response: MQTTResponse
@@ -262,8 +262,6 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
                 {
                     case noTopicFound
                     case attributeNotWriteable
-                    case attributeTypeCurrentlyNotSupported
-                    case valueTypeConversionError
                     case requestDateOutdated
                     case requestDateInFuture
                     case requestAnswered
@@ -286,69 +284,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
                         throw RequestError.attributeNotWriteable
                     }
 
-                    switch (mbd.valuetype, request.value)
-                    {
-                        case let (.bool, .string(value)): JLog.debug("Mapping \(request) to Bool")
-                            switch value.lowercased()
-                            {
-                                case "true": request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(true))
-                                case "false": request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .bool(false))
-                                default: throw RequestError.valueTypeConversionError
-                            }
-                            JLog.debug("mapped to: \(request)")
-
-                        case let (.uint16, .string(value)): fallthrough
-
-                        case let (.int16, .string(value)): JLog.debug("Mapping \(request) to (U)Int16")
-                            if let valueMap = mbd.map,
-                               let value = valueMap.compactMap({ $0.value == value ? $0.key : nil }).first
-                            {
-                                JLog.debug("Got mapvalue:\(value)")
-
-                                if let decimalValue = Decimal(string: value)
-                                {
-                                    request = MQTTRequest(date: request.date, id: request.id, topic: request.topic, value: .decimal(decimalValue))
-                                    JLog.debug("mapped to: \(request)")
-                                }
-                                else
-                                {
-                                    throw RequestError.valueTypeConversionError
-                                }
-                            }
-                            else
-                            {
-                                JLog.error("No map found for \(value) in \(mbd.map ?? [:])")
-                                throw RequestError.attributeTypeCurrentlyNotSupported
-                            }
-
-                        default: break
-                    }
-
-                    switch (mbd.valuetype, request.value)
-                    {
-                        case let (.bool, .bool(value)): JLog.debug("bool:\(value)")
-                            guard mbd.modbustype == .coil else { throw RequestError.attributeTypeCurrentlyNotSupported }
-                            try await modbusDevice.writeInputCoil(startAddress: mbd.address, value: value)
-
-                        case let (.string, .string(value)): JLog.debug("string:\(value)")
-                            try await modbusDevice.writeASCIIString(start: mbd.address, count: mbd.length!, string: value)
-
-                        case let (.uint16, .decimal(value)): JLog.debug("decimal:\(value)")
-                            let factored = mbd.hasFactor ? value / mbd.factor! : value
-                            JLog.debug("factored:\(factored)")
-                            guard let intValue = UInt16(factored.description) else { throw RequestError.valueTypeConversionError }
-                            JLog.debug("Intvalue:\(intValue)")
-                            try await modbusDevice.writeRegisters(to: mbd.address, arrayToWrite: [intValue], endianness: mbd.endianness ?? .bigEndian)
-
-                        case let (.int16, .decimal(value)): JLog.debug("decimal:\(value)")
-                            let factored = mbd.hasFactor ? value / mbd.factor! : value
-                            JLog.debug("factored:\(factored)")
-                            guard let intValue = Int16(factored.description) else { throw RequestError.valueTypeConversionError }
-                            JLog.debug("Intvalue:\(intValue)")
-                            try await modbusDevice.writeRegisters(to: mbd.address, arrayToWrite: [intValue], endianness: mbd.endianness ?? .bigEndian)
-
-                        default: throw RequestError.attributeTypeCurrentlyNotSupported
-                    }
+                    try await modbusDevice.write(request.value, definition: mbd, deviceAddress: deviceAddress)
                     response = MQTTResponse(request: request, success: true)
                 }
                 catch
@@ -416,57 +352,7 @@ func startServing(modbusDevice: ModbusDevice, mqttServer: MQTTDevice, resetURL: 
         {
             JLog.debug("reading:\(mbd)")
 
-            switch mbd.valuetype
-            {
-                case .bool: let value = try await modbusDevice.readInputBitsFrom(startAddress: mbd.address, count: 1, type: mbd.modbustype).first!
-                    payload = ModbusValue(address: mbd.address, value: .bool(value))
-
-                case .uint8: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]).first!
-                    payload = ModbusValue(address: mbd.address, value: .uint8(value))
-
-                case .int8: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int8]).first!
-                    payload = ModbusValue(address: mbd.address, value: .int8(value))
-
-                case .uint16: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]).first!
-                    payload = ModbusValue(address: mbd.address, value: .uint16(value))
-
-                case .int16: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int16]).first!
-                    payload = ModbusValue(address: mbd.address, value: .int16(value))
-
-                case .uint32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt32]).first!
-                    payload = ModbusValue(address: mbd.address, value: .uint32(value))
-
-                case .int32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int32]).first!
-                    payload = ModbusValue(address: mbd.address, value: .int32(value))
-
-                case .uint64: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt64]).first!
-                    payload = ModbusValue(address: mbd.address, value: .uint64(value))
-
-                case .int64: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Int64]).first!
-                    payload = ModbusValue(address: mbd.address, value: .int64(value))
-
-                case .float32: let value = try await (modbusDevice.readRegisters(from: mbd.address, count: 1, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [Float32]).first!
-                    payload = ModbusValue(address: mbd.address, value: .float32(value))
-
-                case .string: let value = try await modbusDevice.readASCIIString(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian)
-                    payload = ModbusValue(address: mbd.address, value: .string(value))
-
-                case .ipv4address: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
-                    let value = array.map { String($0) }.joined(separator: ".")
-                    payload = ModbusValue(address: mbd.address, value: .string(value))
-
-                case .ipv4address16: let array = try await modbusDevice.readRegisters(from: mbd.address, count: 4, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt16]
-                    let value = array.map { String($0) }.joined(separator: ".")
-                    payload = ModbusValue(address: mbd.address, value: .string(value))
-
-                case .macaddress: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
-                    let value = array.map { String(format: "%02X", $0) }.joined(separator: ":")
-                    payload = ModbusValue(address: mbd.address, value: .string(value))
-
-                case .hexstring: let array = try await modbusDevice.readRegisters(from: mbd.address, count: mbd.length!, type: mbd.modbustype, endianness: mbd.endianness ?? .bigEndian) as [UInt8]
-                    let value = array.map { String(format: "%02X", $0) }.joined(separator: "")
-                    payload = ModbusValue(address: mbd.address, value: .string(value))
-            }
+            payload = try await modbusDevice.read(definition: mbd, deviceAddress: deviceAddress)
             errorCounter = 0
 
             JLog.debug("read:\(payload)")
