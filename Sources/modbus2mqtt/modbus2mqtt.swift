@@ -23,7 +23,8 @@ private let serviceRestartDelay: TimeInterval = 30
 
 private enum ConfigurationError: Error
 {
-    case multiDeviceFileConflictsWithLegacyDeviceOptions
+    case multipleMultiDeviceConfigurationSources
+    case multiDeviceConfigurationConflictsWithLegacyDeviceOptions
 }
 
 extension JLog.Level: @retroactive ExpressibleByArgument {}
@@ -91,6 +92,9 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "JSON file containing multiple logical Modbus devices.")
     var modbusDevicesFile: String?
 
+    @Option(name: .long, help: "Inline JSON containing multiple logical Modbus devices.")
+    var modbusDevicesString: String?
+
     func run() async throws
     {
         JLog.loglevel = logLevel
@@ -117,8 +121,30 @@ struct modbus2mqtt: AsyncParsableCommand
             resetURL = nil
         }
 
+        let multiDeviceConfigurationData: Data?
+        let multiDeviceConfigurationDescription: String?
+
+        switch (modbusDevicesFile, modbusDevicesString)
+        {
+            case (.some, .some):
+                throw ConfigurationError.multipleMultiDeviceConfigurationSources
+
+            case let (.some(path), .none):
+                let configurationURL = URL(fileURLWithPath: path)
+                multiDeviceConfigurationData = try Data(contentsOf: configurationURL)
+                multiDeviceConfigurationDescription = configurationURL.path
+
+            case let (.none, .some(json)):
+                multiDeviceConfigurationData = Data(json.utf8)
+                multiDeviceConfigurationDescription = "--modbus-devices-string"
+
+            case (.none, .none):
+                multiDeviceConfigurationData = nil
+                multiDeviceConfigurationDescription = nil
+        }
+
         let configuredDevices: [ModbusDeviceConfiguration]?
-        if let modbusDevicesFile
+        if let multiDeviceConfigurationData
         {
             guard topic == "example/modbus2mqttdevice",
                   modbusDevicePath.isEmpty,
@@ -130,18 +156,16 @@ struct modbus2mqtt: AsyncParsableCommand
                   deviceResetURL == nil
             else
             {
-                throw ConfigurationError.multiDeviceFileConflictsWithLegacyDeviceOptions
+                throw ConfigurationError.multiDeviceConfigurationConflictsWithLegacyDeviceOptions
             }
 
-            let configurationURL = URL(fileURLWithPath: modbusDevicesFile)
-            let configurationData = try Data(contentsOf: configurationURL)
-            let configuration = try JSONDecoder().decode(ModbusDevicesConfiguration.self, from: configurationData)
+            let configuration = try JSONDecoder().decode(ModbusDevicesConfiguration.self, from: multiDeviceConfigurationData)
             for device in configuration.devices
             {
                 _ = try fileURLFromPath(path: device.deviceDescriptionFile)
             }
             configuredDevices = configuration.devices
-            JLog.notice("Loaded \(configuration.devices.count) Modbus devices from \(configurationURL.path)")
+            JLog.notice("Loaded \(configuration.devices.count) Modbus devices from \(multiDeviceConfigurationDescription ?? "configuration")")
         }
         else
         {

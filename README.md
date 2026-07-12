@@ -55,6 +55,9 @@ by `networkAddress` and `port`, creating one Modbus TCP connection for each
 unique endpoint. Multiple Modbus unit addresses behind the same TCP gateway
 therefore share that gateway connection safely.
 
+For short configurations, the same JSON can be supplied directly with
+`--modbus-devices-string`. The string and file options are mutually exclusive.
+
 For example, [`Examples/config/modbus-devices.json`](Examples/config/modbus-devices.json)
 configures two B+G E-Tech meters connected to one Waveshare gateway and one
 Lambda heat pump on a separate endpoint:
@@ -117,7 +120,25 @@ container run --name modbus2mqtt \
   --modbus-devices-file /config/modbus-devices.json
 ```
 
-When `--modbus-devices-file` is present, its entries provide the TCP endpoints,
+An inline Compose-style configuration needs no mounted file:
+
+```yaml
+services:
+  modbus2mqtt:
+    image: ghcr.io/jollyjinx/modbus-2-mqtt-bridge:latest
+    command:
+      - modbus2mqtt
+      - --mqtt-servername
+      - mqtt
+      - --modbus-devices-string
+      - >-
+        {"devices":[
+          {"networkAddress":"10.112.1.2","port":502,"modbusAddress":1,"topic":"counters/heatpump","deviceDescriptionFile":"b+ge-tech.sd100-00b.json"},
+          {"networkAddress":"10.112.1.2","port":502,"modbusAddress":2,"topic":"counters/boiler","deviceDescriptionFile":"b+ge-tech.sd100-00b.json"}
+        ]}
+```
+
+When either multi-device option is present, its entries provide the TCP endpoints,
 unit addresses, MQTT base topics, and device definitions; the corresponding
 legacy single-device options must not also be supplied. Without it, the existing
 `--modbus-server`, `--modbus-port`, `--modbus-address`, `--topic`,
@@ -288,6 +309,9 @@ OPTIONS:
                           communication fails repeatedly.
   --modbus-devices-file <modbus-devices-file>
                           JSON file containing multiple logical Modbus devices.
+  --modbus-devices-string <modbus-devices-string>
+                          Inline JSON containing multiple logical Modbus
+                          devices.
   -h, --help              Show help information.
 
 ```
