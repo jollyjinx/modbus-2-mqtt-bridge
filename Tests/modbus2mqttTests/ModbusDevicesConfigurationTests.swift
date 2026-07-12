@@ -12,7 +12,6 @@ struct ModbusDevicesConfigurationTests
           "devices": [
             {
               "networkAddress": "10.112.1.2",
-              "modbusAddress": 1,
               "topic": "/counters/heatpump/",
               "deviceDescriptionFile": "meter.json"
             },
@@ -31,6 +30,7 @@ struct ModbusDevicesConfigurationTests
 
         #expect(configuration.devices.count == 2)
         #expect(configuration.devices[0].port == 502)
+        #expect(configuration.devices[0].modbusAddress == 3)
         #expect(configuration.devices[0].topic == "counters/heatpump")
         #expect(configuration.devices[1].port == 1502)
         #expect(configuration.devices.map(\.endpoint).allSatisfy { $0.networkAddress == "10.112.1.2" })

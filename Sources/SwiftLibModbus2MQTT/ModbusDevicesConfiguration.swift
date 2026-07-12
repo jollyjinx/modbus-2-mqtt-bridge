@@ -134,7 +134,7 @@ public struct ModbusDeviceConfiguration: Decodable, Sendable, Equatable
         let container = try decoder.container(keyedBy: CodingKeys.self)
         try self.init(networkAddress: container.decode(String.self, forKey: .networkAddress),
                       port: container.decodeIfPresent(UInt16.self, forKey: .port) ?? 502,
-                      modbusAddress: container.decode(UInt8.self, forKey: .modbusAddress),
+                      modbusAddress: container.decodeIfPresent(UInt8.self, forKey: .modbusAddress) ?? 3,
                       topic: container.decode(String.self, forKey: .topic),
                       deviceDescriptionFile: container.decode(String.self, forKey: .deviceDescriptionFile),
                       deviceResetURL: container.decodeIfPresent(String.self, forKey: .deviceResetURL))
