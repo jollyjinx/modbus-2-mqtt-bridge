@@ -1,0 +1,89 @@
+[
+  {
+    "address": "0x000C",
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/p1/power",
+    "title": "Phase 1 active power"
+  },
+  {
+    "address": "0x000E",
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/p2/power",
+    "title": "Phase 2 active power"
+  },
+  {
+    "address": "0x0010",
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/p3/power",
+    "title": "Phase 3 active power"
+  },
+  {
+    "address": "0x0034",
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "unit": "W",
+    "mqtt": "visible",
+    "interval": 1,
+    "topic": "immediate/activepower",
+    "title": "Total system active power"
+  },
+  {
+    "address": "0x0156",
+    "modbustype": "input",
+    "modbusaccess": "read",
+    "valuetype": "float32",
+    "unit": "kWh",
+    "mqtt": "visible",
+    "interval": 30,
+    "topic": "counter/totalactiveenergy",
+    "title": "Total active energy"
+  },
+  {
+    "address": "0xFC00",
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "uint32",
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/serialnumber",
+    "title": "Serial number"
+  },
+  {
+    "address": "0xFC02",
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "hexstring",
+    "length": 2,
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/metercode",
+    "title": "Meter code"
+  },
+  {
+    "address": "0xFC84",
+    "modbustype": "holding",
+    "modbusaccess": "read",
+    "valuetype": "hexstring",
+    "length": 2,
+    "mqtt": "visible",
+    "interval": 0,
+    "topic": "static/softwareversion",
+    "title": "Software version"
+  }
+]
