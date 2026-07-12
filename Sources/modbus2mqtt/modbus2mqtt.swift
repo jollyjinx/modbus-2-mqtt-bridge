@@ -83,6 +83,9 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Device Reset URL (HTTP GET) - called when communication fails repeatedly.")
     var deviceResetURL: String?
 
+    @Option(name: .long, help: "JSON file containing multiple logical Modbus devices.")
+    var modbusDevicesFile: String?
+
     func run() async throws
     {
         JLog.loglevel = logLevel
@@ -109,7 +112,24 @@ struct modbus2mqtt: AsyncParsableCommand
             resetURL = nil
         }
 
-        _ = try fileURLFromPath(path: deviceDescriptionFile)
+        let configuredDevices: [ModbusDeviceConfiguration]?
+        if let modbusDevicesFile
+        {
+            let configurationURL = URL(fileURLWithPath: modbusDevicesFile)
+            let configurationData = try Data(contentsOf: configurationURL)
+            let configuration = try JSONDecoder().decode(ModbusDevicesConfiguration.self, from: configurationData)
+            for device in configuration.devices
+            {
+                _ = try fileURLFromPath(path: device.deviceDescriptionFile)
+            }
+            configuredDevices = configuration.devices
+            JLog.notice("Loaded \(configuration.devices.count) Modbus devices from \(configurationURL.path)")
+        }
+        else
+        {
+            _ = try fileURLFromPath(path: deviceDescriptionFile)
+            configuredDevices = nil
+        }
 
         let mqttServer = MQTTDevice(server: MQTTServer(hostname: mqttServername, port: mqttPort, username: mqttUsername, password: mqttPassword), topic: topic)
 
@@ -117,16 +137,23 @@ struct modbus2mqtt: AsyncParsableCommand
         {
             do
             {
-                let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
+                if let configuredDevices
                 {
-                    try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
+                    try await startServing(configurations: configuredDevices, mqttServer: mqttServer, options: self)
                 }
                 else
                 {
-                    try ModbusDevice(device: modbusDevicePath, baudRate: modbusSerialSpeed)
-                }
+                    let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
+                    {
+                        try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
+                    }
+                    else
+                    {
+                        try ModbusDevice(device: modbusDevicePath, slaveid: Int(modbusAddress), baudRate: modbusSerialSpeed)
+                    }
 
-                try await startServing(modbusDevice: modbusDevice, deviceAddress: modbusAddress, mqttServer: mqttServer, resetURL: resetURL, options: self)
+                    try await startServing(modbusDevice: modbusDevice, deviceAddress: modbusAddress, mqttServer: mqttServer, resetURL: resetURL, options: self)
+                }
             }
             catch
             {
