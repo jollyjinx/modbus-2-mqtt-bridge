@@ -9,9 +9,12 @@ entry_point: true
 front_matter_required: true
 related:
   - "README.md"
+  - "AI/README.md"
   - "docs/architecture.md"
   - "docs/device-definitions.md"
   - "docs/mqtt-request-response.md"
+  - "docs/MULTI_DEVICE_ARCHITECTURE.md"
+  - "docs/mqtt-unchanged-publish-interval-plan.md"
   - "docs/documentation-style.md"
 ---
 
@@ -41,8 +44,10 @@ Use the front matter to describe the file before the Markdown body begins. Keep 
 ## Documentation Map
 
 - [Architecture](docs/architecture.md): package layout, runtime flow, and important types.
+- [Multi-device Architecture](docs/MULTI_DEVICE_ARCHITECTURE.md): shared endpoints, logical devices, MQTT routing, recovery, and validation.
 - [Device Definitions](docs/device-definitions.md): JSON device definition format and bundled device files.
 - [MQTT Request/Response](docs/mqtt-request-response.md): write flow for Modbus values through MQTT.
+- [Unchanged Publish Interval](docs/mqtt-unchanged-publish-interval-plan.md): implemented heartbeat policy, design, and verification record.
 - [Documentation Style](docs/documentation-style.md): rules for adding or changing documentation files.
 
 ## Project Summary
@@ -65,4 +70,3 @@ Run the executable with `--help` for the current command-line options:
 ```bash
 swift run modbus2mqtt --help
 ```
-

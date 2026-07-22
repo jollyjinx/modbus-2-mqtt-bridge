@@ -18,12 +18,15 @@ Device definition files control which Modbus values are exposed over MQTT. Bundl
 ## Bundled Definitions
 
 - `b+ge-tech.sd100-00b.json`: B+G E-Tech SD100-00B energy meter.
+- `b+ge-tech.sd100-00b.minimal.json`: reduced B+G E-Tech SD100-00B register set.
 - `daheimladen.json`: DaheimLader wallbox.
 - `eastron.sdm72dm-v2.json`: Eastron SDM72DM-V2 energy meter.
+- `eastron.sdm72dm-v2.minimal.json`: reduced Eastron SDM72DM-V2 register set.
 - `goodwe-et15-30.json`: GoodWe ET 15-30 solar inverter.
 - `hanmatek.hm310t.json`: Hanmatek HM310T laboratory power supply.
 - `lambda.json`: Lambda Eureka heat pumps.
 - `lambda.solartherm.json`: Lambda heat pump with solar thermal integration.
+- `nibe.s2125.json`: NIBE S2125 air/water heat pump.
 - `phoenix.evcharger.json`: Phoenix Contact electric vehicle charge controller.
 - `sma.sunnyboy.json` and `sma.sunnyboy.all.json`: SMA Sunny Boy inverter definitions.
 - `sma.sunnystore.json` and `sma.sunnystore.all.json`: SMA Sunny Boy Storage definitions.
@@ -37,12 +40,15 @@ Common fields include:
 - `address`: Modbus register or coil address.
 - `modbustype`: Modbus area, such as `holding` or `coil`.
 - `modbusaccess`: allowed access mode, such as `read`, `write`, or `readwrite`.
-- `valuetype`: decoded value type, such as `string`, `uint16`, `int32`, `float`, `ipv4address`, or `macaddress`.
+- `valuetype`: decoded value type, including booleans, fixed-width integers, `float32`, strings, IP or MAC addresses, and hexadecimal strings.
 - `length`: length for value types that need it, especially strings.
+- `endianness`: optional register byte order, `bigEndian` or `littleEndian`.
 - `interval`: polling interval in seconds. `0` means the value is requested at startup and then retained through MQTT.
 - `factor`: optional multiplier applied to numeric values.
+- `resolution`: optional positive rounding increment for `float32` values.
 - `unit`: optional display unit.
 - `mqtt`: MQTT visibility or retention behavior, such as `visible`, `invisible`, or `retained`.
+- `publishalways`: optional override that publishes after every poll.
 - `topic`: MQTT topic suffix for the value.
 - `title`: human-readable label.
 - `map`: optional mapping from raw values to named values.
@@ -99,4 +105,3 @@ JSON does not allow comments; this example omits comments so it can be copied in
   }
 ]
 ```
-

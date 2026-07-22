@@ -1,3 +1,18 @@
+---
+title: "Multi-device Modbus Architecture"
+description: "Resource ownership, configuration, topic routing, recovery, and validation for serving multiple Modbus devices in one process."
+audience:
+  - agents
+  - maintainers
+status: "active"
+last_updated: 2026-07-22
+related:
+  - "../README.md"
+  - "../DOCUMENTATION.md"
+  - "../Examples/config/modbus-devices.json"
+  - "../Sources/modbus2mqtt/MultiDeviceServing.swift"
+---
+
 # Multi-device Modbus architecture
 
 ## Goal
