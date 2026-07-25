@@ -5,7 +5,7 @@ audience:
   - agents
   - maintainers
 status: "active"
-last_updated: 2026-07-22
+last_updated: 2026-07-25
 related:
   - "../README.md"
   - "../DOCUMENTATION.md"
@@ -104,11 +104,11 @@ Logical devices never own MQTT connections or physical Modbus connections.
 
 One MQTT client connects before logical-device workers start. It subscribes to every configured request namespace and has exactly one message-consumer loop. That loop routes messages by configured base topic, executes the write against the selected logical device, and publishes on the corresponding response path.
 
-Polling workers publish through the same MQTT owner. MQTT reconnection and resubscription are centralized so multiple workers cannot initiate competing reconnect attempts. After a reconnect, retained caches are invalidated so current retained values are republished.
+Polling workers publish through the same MQTT owner. Automatic reconnection inside the MQTT client library is disabled. A post-connect MQTT disconnect ends the complete serving session so queued publications cannot overtake the next MQTT `CONNECT` packet. The outer service loop then creates a fresh MQTT client, subscribes again, and starts fresh polling workers. Recreated publication gates ensure current retained values are republished.
 
 ### Supervision and cancellation
 
-Each logical device has an independently supervised polling worker. Operational failure in one worker is handled locally and does not cancel other workers. Process shutdown cancels the MQTT router and all polling workers, then disconnects every unique Modbus endpoint and the MQTT client.
+Each logical device has an independently supervised polling worker. Operational failure in one worker is handled locally and does not cancel other workers. An MQTT disconnect terminates the shared serving session, cancels the MQTT router and every polling worker, then disconnects every unique Modbus endpoint and the MQTT client. Process shutdown follows the same structured-cancellation path.
 
 Structured concurrency owns worker lifetimes. Long-running loops check cancellation at natural suspension points.
 
@@ -122,7 +122,7 @@ Error state is scoped according to the failing resource:
 
 - register or unit failures update only the logical device;
 - TCP failures disconnect and recover only the affected physical endpoint;
-- MQTT failures are recovered once by the shared MQTT owner;
+- MQTT failures terminate the shared serving session and are recovered by the outer service loop with a fresh client;
 - configuration and definition failures prevent startup.
 
 An endpoint reset URL, when configured, belongs to the physical endpoint because resetting a gateway affects every logical device behind it. Reset attempts require endpoint-wide coordination and cooldown.

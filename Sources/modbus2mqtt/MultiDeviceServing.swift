@@ -13,21 +13,6 @@ private struct RuntimeModbusDevice: Sendable
     let definitions: [Int: ModbusDefinition]
 }
 
-private actor MQTTConnectionGeneration
-{
-    private var generation = 0
-
-    func advance()
-    {
-        generation += 1
-    }
-
-    func current() -> Int
-    {
-        generation
-    }
-}
-
 private actor EndpointRecoveryCoordinator
 {
     private let endpoint: ModbusEndpointKey
@@ -146,10 +131,25 @@ func startServing(configurations: [ModbusDeviceConfiguration],
 
     let mqttClient = MQTTClient(configuration: .init(target: .host(mqttServer.server.hostname,
                                                                     port: Int(mqttServer.server.port)),
-                                                     credentials: credentials),
+                                                     credentials: credentials,
+                                                     reconnectMode: .none),
                                 eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
+    let (disconnectEvents, disconnectContinuation) = AsyncStream.makeStream(
+        of: MQTTServingSessionError.self,
+        bufferingPolicy: .bufferingNewest(1)
+    )
+    let disconnectObserver = mqttClient.whenDisconnected
+    { reason in
+        disconnectContinuation.yield(.disconnected(String(describing: reason)))
+        disconnectContinuation.finish()
+    }
+    defer
+    {
+        disconnectObserver.cancel()
+        disconnectContinuation.finish()
+    }
+
     let router = MQTTRequestRouter(devices: configurations)
-    let generation = MQTTConnectionGeneration()
     let devices = runtimeDevices
     let requestTTL = options.mqttRequestTTL
     let emitInterval = options.emitInterval
@@ -160,54 +160,39 @@ func startServing(configurations: [ModbusDeviceConfiguration],
     {
         try await mqttClient.connect()
         try await mqttClient.subscribe(to: router.requestSubscriptions)
-        await generation.advance()
-    }
-    catch
-    {
-        try? await mqttClient.disconnect()
-        for endpoint in endpoints.values
-        {
-            await endpoint.disconnect()
-        }
-        throw error
-    }
 
-    let reconnectObserver = mqttClient.whenConnected { _ in
-        Task
-        {
-            await restoreSubscriptions(client: mqttClient,
-                                       subscriptions: router.requestSubscriptions,
-                                       generation: generation)
-        }
-    }
-
-    await withTaskGroup(of: Void.self)
-    { group in
-        group.addTask
-        {
-            await serveMQTTRequests(client: mqttClient,
-                                    router: router,
-                                    runtimeDevices: devices,
-                                    requestTTL: requestTTL)
-        }
-
+        var workers: [MQTTServingWorker] = [
+            {
+                await serveMQTTRequests(client: mqttClient,
+                                        router: router,
+                                        runtimeDevices: devices,
+                                        requestTTL: requestTTL)
+            },
+        ]
         for device in devices
         {
-            group.addTask
+            workers.append
             {
                 await poll(device: device,
                            mqttClient: mqttClient,
-                           generation: generation,
                            emitInterval: emitInterval,
                            mqttAutoRetainTime: mqttAutoRetainTime,
                            mqttUnchangedPublishInterval: mqttUnchangedPublishInterval)
             }
         }
 
-        await group.waitForAll()
+        try await runMQTTServingSession(until: disconnectEvents, workers: workers)
+    }
+    catch
+    {
+        for endpoint in endpoints.values
+        {
+            await endpoint.disconnect()
+        }
+        try? await mqttClient.disconnect()
+        throw error
     }
 
-    reconnectObserver.cancel()
     for endpoint in endpoints.values
     {
         await endpoint.disconnect()
@@ -217,7 +202,6 @@ func startServing(configurations: [ModbusDeviceConfiguration],
 
 private func poll(device: RuntimeModbusDevice,
                   mqttClient: MQTTClient,
-                  generation: MQTTConnectionGeneration,
                   emitInterval: Double,
                   mqttAutoRetainTime: Double,
                   mqttUnchangedPublishInterval: Double) async
@@ -225,21 +209,12 @@ private func poll(device: RuntimeModbusDevice,
     var definitions = device.definitions
     var publicationGate = MQTTPublicationGate()
     var errorCounter = 0
-    var observedMQTTGeneration = await generation.current()
     let context = "[\(device.configuration.endpoint) unit=\(device.configuration.modbusAddress) topic=\(device.configuration.topic)]"
 
     while Task.isCancelled == false
     {
         do
         {
-            let currentGeneration = await generation.current()
-            if currentGeneration != observedMQTTGeneration
-            {
-                observedMQTTGeneration = currentGeneration
-                publicationGate.reset()
-                definitions.keys.forEach { definitions[$0]!.nextReadDate = .distantPast }
-            }
-
             try Task.checkCancellation()
             let now = Date()
             guard let definition = definitions.values.min(by: {
@@ -401,41 +376,6 @@ private func serveMQTTRequests(client: MQTTClient,
             {
                 JLog.error("Could not publish MQTT response on \(route.responseTopic): \(error)")
             }
-        }
-    }
-}
-
-private func restoreSubscriptions(client: MQTTClient,
-                                  subscriptions: [String],
-                                  generation: MQTTConnectionGeneration) async
-{
-    var retryDelay: UInt64 = 1
-
-    while Task.isCancelled == false, client.isConnected
-    {
-        do
-        {
-            try await client.subscribe(to: subscriptions)
-            await generation.advance()
-            JLog.notice("Restored MQTT subscriptions after reconnect")
-            return
-        }
-        catch is CancellationError
-        {
-            return
-        }
-        catch
-        {
-            JLog.error("Could not restore MQTT subscriptions; retrying in \(retryDelay) seconds: \(error)")
-            do
-            {
-                try await Task.sleep(nanoseconds: retryDelay * UInt64(NSEC_PER_SEC))
-            }
-            catch
-            {
-                return
-            }
-            retryDelay = min(retryDelay * 2, 30)
         }
     }
 }
