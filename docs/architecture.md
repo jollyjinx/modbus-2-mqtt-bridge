@@ -31,6 +31,14 @@ related:
 6. Writable definitions can be changed through MQTT request messages.
 7. The bridge publishes MQTT response messages for accepted write requests.
 
+## MQTT Client Lifecycle
+
+The executable uses the upstream `swift-server-community/mqtt-nio` 3.x API. Each serving attempt opens an `MQTTConnection` with `withConnection(...)`, subscribes to the configured request topics, and runs the subscription consumer alongside the Modbus pollers in one throwing task group.
+
+mqtt-nio 3 delivers publish payloads as NIO `ByteBuffer` values. The bridge decodes request buffers as UTF-8 JSON and creates UTF-8 buffers for value and response publications. Topic shapes and JSON payload contracts remain owned by modbus2mqtt rather than the MQTT client library.
+
+If the broker closes the connection, the subscription's async sequence throws. That error cancels the pollers, exits the scoped connection, and reaches the executable's outer restart loop. The loop then observes the configured restart delay before opening a new connection and subscriptions.
+
 ## Key Types
 
 - `ModbusDefinition`: one register or coil definition from a JSON device map, including Modbus address, access mode, value type, topic, interval, scaling, mappings, and bit mappings.
@@ -43,5 +51,4 @@ related:
 
 ## Recovery Behavior
 
-The executable is designed as a long-running bridge. Communication failures are counted, repeated failures can trigger `--device-reset-url`, and the bridge resumes attempts after delays rather than treating transient failures as a reason to stop the process.
-
+The executable is designed as a long-running bridge. Modbus communication failures are counted, repeated failures can trigger `--device-reset-url`, and the bridge resumes attempts after delays rather than treating transient failures as a reason to stop the process. MQTT connection and subscription failures end the current serving attempt so the outer service loop can establish a fresh scoped connection.

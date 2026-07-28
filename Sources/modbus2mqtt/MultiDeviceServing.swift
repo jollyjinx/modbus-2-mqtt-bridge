@@ -1,7 +1,6 @@
 import Foundation
 import JLog
 import MQTTNIO
-import NIO
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
@@ -64,7 +63,7 @@ private enum MultiDeviceServingError: Error
     case missingRuntimeDevice(String)
 }
 
-private enum MQTTRequestHandlingError: Error
+enum MQTTRequestHandlingError: Error
 {
     case noTopicFound
     case attributeNotWriteable
@@ -119,36 +118,6 @@ func startServing(configurations: [ModbusDeviceConfiguration],
                                                   definitions: definitions))
     }
 
-    let credentials: MQTTConfiguration.Credentials? = if let username = mqttServer.server.username,
-                                                         let password = mqttServer.server.password
-    {
-        MQTTConfiguration.Credentials(username: username, password: password)
-    }
-    else
-    {
-        nil
-    }
-
-    let mqttClient = MQTTClient(configuration: .init(target: .host(mqttServer.server.hostname,
-                                                                    port: Int(mqttServer.server.port)),
-                                                     credentials: credentials,
-                                                     reconnectMode: .none),
-                                eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-    let (disconnectEvents, disconnectContinuation) = AsyncStream.makeStream(
-        of: MQTTServingSessionError.self,
-        bufferingPolicy: .bufferingNewest(1)
-    )
-    let disconnectObserver = mqttClient.whenDisconnected
-    { reason in
-        disconnectContinuation.yield(.disconnected(String(describing: reason)))
-        disconnectContinuation.finish()
-    }
-    defer
-    {
-        disconnectObserver.cancel()
-        disconnectContinuation.finish()
-    }
-
     let router = MQTTRequestRouter(devices: configurations)
     let devices = runtimeDevices
     let requestTTL = options.mqttRequestTTL
@@ -158,30 +127,42 @@ func startServing(configurations: [ModbusDeviceConfiguration],
 
     do
     {
-        try await mqttClient.connect()
-        try await mqttClient.subscribe(to: router.requestSubscriptions)
+        try await MQTTConnection.withConnection(
+            address: .hostname(mqttServer.server.hostname, port: Int(mqttServer.server.port)),
+            configuration: mqttConnectionConfiguration(for: mqttServer.server)
+        )
+        { mqttConnection in
+            let subscriptions = router.requestSubscriptions.map
+            {
+                MQTTSubscribeInfo(topicFilter: $0, qos: .atMostOnce)
+            }
 
-        var workers: [MQTTServingWorker] = [
-            {
-                await serveMQTTRequests(client: mqttClient,
-                                        router: router,
-                                        runtimeDevices: devices,
-                                        requestTTL: requestTTL)
-            },
-        ]
-        for device in devices
-        {
-            workers.append
-            {
-                await poll(device: device,
-                           mqttClient: mqttClient,
-                           emitInterval: emitInterval,
-                           mqttAutoRetainTime: mqttAutoRetainTime,
-                           mqttUnchangedPublishInterval: mqttUnchangedPublishInterval)
+            try await mqttConnection.subscribe(to: subscriptions)
+            { subscription in
+                var workers: [MQTTServingWorker] = [
+                    {
+                        try await serveMQTTRequests(connection: mqttConnection,
+                                                    subscription: subscription,
+                                                    router: router,
+                                                    runtimeDevices: devices,
+                                                    requestTTL: requestTTL)
+                    },
+                ]
+                for device in devices
+                {
+                    workers.append
+                    {
+                        await poll(device: device,
+                                   mqttConnection: mqttConnection,
+                                   emitInterval: emitInterval,
+                                   mqttAutoRetainTime: mqttAutoRetainTime,
+                                   mqttUnchangedPublishInterval: mqttUnchangedPublishInterval)
+                    }
+                }
+
+                try await runMQTTServingSession(workers: workers)
             }
         }
-
-        try await runMQTTServingSession(until: disconnectEvents, workers: workers)
     }
     catch
     {
@@ -189,7 +170,6 @@ func startServing(configurations: [ModbusDeviceConfiguration],
         {
             await endpoint.disconnect()
         }
-        try? await mqttClient.disconnect()
         throw error
     }
 
@@ -197,11 +177,10 @@ func startServing(configurations: [ModbusDeviceConfiguration],
     {
         await endpoint.disconnect()
     }
-    try? await mqttClient.disconnect()
 }
 
 private func poll(device: RuntimeModbusDevice,
-                  mqttClient: MQTTClient,
+                  mqttConnection: MQTTConnection,
                   emitInterval: Double,
                   mqttAutoRetainTime: Double,
                   mqttUnchangedPublishInterval: Double) async
@@ -251,9 +230,10 @@ private func poll(device: RuntimeModbusDevice,
                                              at: publicationDate,
                                              unchangedPublishInterval: mqttUnchangedPublishInterval)
             {
-                try await mqttClient.publish(MQTTMessage(topic: "\(device.configuration.topic)/\(definition.topic)",
-                                                         payload: try publishedPayload.json(using: definition),
-                                                         retain: retained))
+                try await mqttConnection.publish(to: "\(device.configuration.topic)/\(definition.topic)",
+                                                 payload: .init(string: try publishedPayload.json(using: definition)),
+                                                 qos: .atMostOnce,
+                                                 retain: retained)
                 publicationGate.recordSuccessfulPublication(topic: definition.topic,
                                                              value: publishedPayload.value,
                                                              at: publicationDate)
@@ -293,34 +273,37 @@ private func poll(device: RuntimeModbusDevice,
     }
 }
 
-private func serveMQTTRequests(client: MQTTClient,
+private func serveMQTTRequests(connection: MQTTConnection,
+                               subscription: MQTTSubscription,
                                router: MQTTRequestRouter,
                                runtimeDevices: [RuntimeModbusDevice],
-                               requestTTL: Double) async
+                               requestTTL: Double) async throws
 {
     let runtimeDevicesByTopic = Dictionary(uniqueKeysWithValues: runtimeDevices.map { ($0.configuration.topic, $0) })
     var knownRequests = [String: Set<MQTTRequest>]()
 
-    for await message in client.messages
+    for try await message in subscription
     {
         if Task.isCancelled { return }
 
-        guard let route = router.route(for: message.topic),
+        guard let route = router.route(for: message.topicName),
               let runtimeDevice = runtimeDevicesByTopic[route.device.topic]
         else
         {
-            JLog.warning("Received MQTT message without a configured route: \(message.topic)")
+            JLog.warning("Received MQTT message without a configured route: \(message.topicName)")
             continue
         }
 
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
-        guard let data = message.payload.string?.data(using: .utf8),
+        guard let requestString = message.payload.getString(at: message.payload.readerIndex,
+                                                            length: message.payload.readableBytes),
+              let data = requestString.data(using: .utf8),
               let request = try? decoder.decode(MQTTRequest.self, from: data)
         else
         {
-            JLog.error("Could not decode MQTT request on \(message.topic)")
+            JLog.error("Could not decode MQTT request on \(message.topicName)")
             continue
         }
 
@@ -363,9 +346,9 @@ private func serveMQTTRequests(client: MQTTClient,
         {
             do
             {
-                try await client.publish(MQTTMessage(topic: route.responseTopic,
-                                                     payload: responseString,
-                                                     retain: false))
+                try await connection.publish(to: route.responseTopic,
+                                             payload: .init(string: responseString),
+                                             qos: .atMostOnce)
                 let outdated = Date(timeIntervalSinceNow: -requestTTL)
                 var deviceRequests = knownRequests[route.device.topic, default: []]
                 deviceRequests = deviceRequests.filter { $0.date >= outdated }
@@ -378,4 +361,10 @@ private func serveMQTTRequests(client: MQTTClient,
             }
         }
     }
+}
+
+func mqttConnectionConfiguration(for server: MQTTServer) -> MQTTConnectionConfiguration
+{
+    MQTTConnectionConfiguration(userName: server.username,
+                                password: server.password)
 }

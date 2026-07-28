@@ -7,7 +7,6 @@ import Dispatch
 import Foundation
 import JLog
 import MQTTNIO
-import NIO
 import SwiftLibModbus
 import SwiftLibModbus2MQTT
 
@@ -28,7 +27,13 @@ private enum ConfigurationError: Error
     case invalidMQTTUnchangedPublishInterval(Double)
 }
 
-extension JLog.Level: @retroactive ExpressibleByArgument {}
+extension JLog.Level: @retroactive ExpressibleByArgument
+{
+    public init?(argument: String)
+    {
+        self.init(argument)
+    }
+}
 #if DEBUG
     let defaultLoglevel: JLog.Level = .debug
 #else
@@ -282,195 +287,188 @@ func callResetURL(_ url: URL) async throws
 func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
-    var modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
+    let modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
 
     JLog.debug("modbusdefinitions:\(modbusDefinitions)")
-
-    let credentials: MQTTConfiguration.Credentials? = if let username = mqttServer.server.username,
-                                                         let password = mqttServer.server.password
-    {
-        MQTTConfiguration.Credentials(username: username, password: password)
-    }
-    else
-    {
-        nil
-    }
-    let mqttClient = MQTTClient(configuration: .init(target: .host(mqttServer.server.hostname, port: Int(mqttServer.server.port)),
-                                                     credentials: credentials),
-                                eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
-    try await mqttClient.connect()
-
-    guard mqttClient.isConnected
-    else
-    {
-        fatalError("Could not connect to mqtt server")
-    }
 
     let requestPath = "\(mqttServer.topic)/request"
     let responsePath = "\(mqttServer.topic)/response"
 
-    try await mqttClient.subscribe(to: requestPath + "/#")
-
-    let staticDefinitions = modbusDefinitions.values
-    let requestTask = Task
-    {
-        var knownRequests = Set<MQTTRequest>()
-        let requestTTL = options.mqttRequestTTL
-
-        for await message in mqttClient.messages
-        {
-            JLog.debug("Received: \(message) contentType:\(message.payload)")
-
-            var responseTopic = message.topic
-
-            if let range = responseTopic.range(of: requestPath)
-            {
-                responseTopic.replaceSubrange(range, with: responsePath)
-            }
-
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-
-            if let data = message.payload.string?.data(using: .utf8),
-               let request = try? decoder.decode(MQTTRequest.self, from: data)
-            {
-                JLog.debug("Got Request:\(request)")
-                let response: MQTTResponse
-
-                enum RequestError: Error
+    try await MQTTConnection.withConnection(
+        address: .hostname(mqttServer.server.hostname, port: Int(mqttServer.server.port)),
+        configuration: mqttConnectionConfiguration(for: mqttServer.server)
+    )
+    { mqttConnection in
+        try await mqttConnection.subscribe(to: [
+            MQTTSubscribeInfo(topicFilter: requestPath + "/#", qos: .atMostOnce),
+        ])
+        { subscription in
+            try await runMQTTServingSession(workers: [
                 {
-                    case noTopicFound
-                    case attributeNotWriteable
-                    case requestDateOutdated
-                    case requestDateInFuture
-                    case requestAnswered
-                }
-
-                do
+                    try await serveMQTTRequests(subscription: subscription,
+                                                connection: mqttConnection,
+                                                modbusDevice: modbusDevice,
+                                                deviceAddress: deviceAddress,
+                                                definitions: Array(modbusDefinitions.values),
+                                                requestPath: requestPath,
+                                                responsePath: responsePath,
+                                                requestTTL: options.mqttRequestTTL)
+                },
                 {
-                    let outdated = Date(timeIntervalSinceNow: -requestTTL)
-                    let tofarinfuture = Date(timeIntervalSinceNow: requestTTL)
-                    JLog.debug("Request from:\(request.date) Allowed range:\(outdated) - \(tofarinfuture)")
-
-                    guard request.date > outdated else { throw RequestError.requestDateOutdated }
-                    guard request.date < tofarinfuture else { throw RequestError.requestDateInFuture }
-                    guard !knownRequests.contains(request) else { throw RequestError.requestAnswered }
-
-                    guard let mbd = staticDefinitions.first(where: { $0.topic == request.topic }) else { throw RequestError.noTopicFound }
-
-                    if mbd.modbusaccess == .read
-                    {
-                        throw RequestError.attributeNotWriteable
-                    }
-
-                    try await modbusDevice.write(request.value, definition: mbd, deviceAddress: deviceAddress)
-                    response = MQTTResponse(request: request, success: true)
-                }
-                catch
-                {
-                    JLog.error("Could not work on request: \(request) due to:\(error)")
-                    response = MQTTResponse(request: request, success: false, error: "\(error)")
-                }
-
-                let outdated = Date(timeIntervalSinceNow: -requestTTL)
-
-                knownRequests = knownRequests.filter { $0.date < outdated }
-                knownRequests.insert(request)
-
-//                let topic = "\(mqttServer.topic)/response/\(request.id)"
-
-                let jsonEncoder = JSONEncoder()
-                jsonEncoder.dateEncodingStrategy = .iso8601
-                jsonEncoder.outputFormatting = .sortedKeys
-                if let jsonData = try? jsonEncoder.encode(response),
-                   let jsonString = String(data: jsonData, encoding: .utf8)
-                {
-                    try await mqttClient.publish(MQTTMessage(topic: responseTopic,
-                                                             payload: jsonString,
-                                                             retain: false))
-                }
-            }
-            else
-            {
-                JLog.error("Could not decode request: \(message)")
-            }
+                    try await poll(modbusDevice: modbusDevice,
+                                   deviceAddress: deviceAddress,
+                                   definitions: modbusDefinitions,
+                                   mqttConnection: mqttConnection,
+                                   topicPrefix: mqttServer.topic,
+                                   resetURL: resetURL,
+                                   options: options)
+                },
+            ])
         }
-        // only when error
     }
-    defer { requestTask.cancel() }
+}
 
+private func serveMQTTRequests(subscription: MQTTSubscription,
+                               connection: MQTTConnection,
+                               modbusDevice: ModbusDevice,
+                               deviceAddress: UInt16,
+                               definitions: [ModbusDefinition],
+                               requestPath: String,
+                               responsePath: String,
+                               requestTTL: Double) async throws
+{
+    var knownRequests = Set<MQTTRequest>()
+
+    for try await message in subscription
+    {
+        JLog.debug("Received MQTT message on \(message.topicName)")
+
+        var responseTopic = message.topicName
+
+        if let range = responseTopic.range(of: requestPath)
+        {
+            responseTopic.replaceSubrange(range, with: responsePath)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        guard let requestString = message.payload.getString(at: message.payload.readerIndex,
+                                                            length: message.payload.readableBytes),
+              let data = requestString.data(using: .utf8),
+              let request = try? decoder.decode(MQTTRequest.self, from: data)
+        else
+        {
+            JLog.error("Could not decode MQTT request on \(message.topicName)")
+            continue
+        }
+
+        JLog.debug("Got Request:\(request)")
+        let response: MQTTResponse
+
+        do
+        {
+            let outdated = Date(timeIntervalSinceNow: -requestTTL)
+            let tooFarInFuture = Date(timeIntervalSinceNow: requestTTL)
+            JLog.debug("Request from:\(request.date) Allowed range:\(outdated) - \(tooFarInFuture)")
+
+            guard request.date > outdated else { throw MQTTRequestHandlingError.requestDateOutdated }
+            guard request.date < tooFarInFuture else { throw MQTTRequestHandlingError.requestDateInFuture }
+            guard knownRequests.contains(request) == false else { throw MQTTRequestHandlingError.requestAnswered }
+            guard let definition = definitions.first(where: { $0.topic == request.topic })
+            else { throw MQTTRequestHandlingError.noTopicFound }
+            guard definition.modbusaccess != .read
+            else { throw MQTTRequestHandlingError.attributeNotWriteable }
+
+            try await modbusDevice.write(request.value, definition: definition, deviceAddress: deviceAddress)
+            response = MQTTResponse(request: request, success: true)
+        }
+        catch
+        {
+            JLog.error("Could not work on request: \(request) due to:\(error)")
+            response = MQTTResponse(request: request, success: false, error: "\(error)")
+        }
+
+        let outdated = Date(timeIntervalSinceNow: -requestTTL)
+        knownRequests = knownRequests.filter { $0.date < outdated }
+        knownRequests.insert(request)
+
+        let jsonEncoder = JSONEncoder()
+        jsonEncoder.dateEncodingStrategy = .iso8601
+        jsonEncoder.outputFormatting = .sortedKeys
+        if let jsonData = try? jsonEncoder.encode(response),
+           let jsonString = String(data: jsonData, encoding: .utf8)
+        {
+            try await connection.publish(to: responseTopic,
+                                         payload: .init(string: jsonString),
+                                         qos: .atMostOnce)
+        }
+    }
+}
+
+private func poll(modbusDevice: ModbusDevice,
+                  deviceAddress: UInt16,
+                  definitions: [Int: ModbusDefinition],
+                  mqttConnection: MQTTConnection,
+                  topicPrefix: String,
+                  resetURL: URL?,
+                  options: modbus2mqtt) async throws
+{
+    var modbusDefinitions = definitions
     var errorCounter = 0
-
     var publicationGate = MQTTPublicationGate()
 
-    while true
+    while Task.isCancelled == false
     {
+        try Task.checkCancellation()
         let now = Date()
 
-        let mbd = modbusDefinitions.values.min(by: {
+        guard let definition = modbusDefinitions.values.min(by: {
             if $0.nextReadDate < now,
-               $1.nextReadDate < now, // both of them are ready
-               $0.interval != $1.interval // then interval is like priority
+               $1.nextReadDate < now,
+               $0.interval != $1.interval
             {
                 return $0.interval < $1.interval
             }
             return $0.nextReadDate < $1.nextReadDate
-        })! as ModbusDefinition
+        })
+        else { return }
 
-        while mbd.nextReadDate > Date()
+        while definition.nextReadDate > Date()
         {
-            let timeToWait: TimeInterval = max(options.emitInterval, mbd.nextReadDate.timeIntervalSinceNow)
-            JLog.debug("nextLoopDate:\(String(describing: mbd.nextReadDate)) mininterval:\(options.emitInterval) timetowait:\(timeToWait)")
-            try? await Task.sleep(nanoseconds: UInt64(timeToWait * Double(NSEC_PER_SEC)))
+            let timeToWait = max(options.emitInterval, definition.nextReadDate.timeIntervalSinceNow)
+            JLog.debug("nextLoopDate:\(String(describing: definition.nextReadDate)) mininterval:\(options.emitInterval) timetowait:\(timeToWait)")
+            try await Task.sleep(nanoseconds: UInt64(timeToWait * Double(NSEC_PER_SEC)))
             JLog.debug("waited.")
         }
 
-        let payload: ModbusValue
-
         do
         {
-            JLog.debug("reading:\(mbd)")
-
-            payload = try await modbusDevice.read(definition: mbd, deviceAddress: deviceAddress)
+            JLog.debug("reading:\(definition)")
+            let payload = try await modbusDevice.read(definition: definition, deviceAddress: deviceAddress)
             errorCounter = 0
 
             JLog.debug("read:\(payload)")
 
-            let publishedPayload = payload.applyingResolution(using: mbd)
-
-            if !mqttClient.isConnected
-            {
-                JLog.error("No longer connected to mqtt server - reconnecting")
-
-                publicationGate.reset()
-                modbusDefinitions.keys.forEach { address in modbusDefinitions[address]!.nextReadDate = .distantPast }
-
-                try await mqttClient.reconnect()
-                try await mqttClient.subscribe(to: requestPath + "/#")
-
-                guard mqttClient.isConnected
-                else
-                {
-                    fatalError("Could not connect to mqtt server")
-                }
-            }
-
-            let retained = (mbd.mqtt == .retained) || (mbd.interval == 0) || mbd.interval > options.mqttAutoRetainTime
-            let publishAlways = mbd.publishalways ?? false
+            let publishedPayload = payload.applyingResolution(using: definition)
+            let retained = definition.mqtt == .retained
+                || definition.interval == 0
+                || definition.interval > options.mqttAutoRetainTime
+            let publishAlways = definition.publishalways ?? false
             let publicationDate = Date()
 
-            if publicationGate.shouldPublish(topic: mbd.topic,
+            if publicationGate.shouldPublish(topic: definition.topic,
                                                value: publishedPayload.value,
                                                retained: retained,
                                                publishAlways: publishAlways,
                                                at: publicationDate,
                                                unchangedPublishInterval: options.mqttUnchangedPublishInterval)
             {
-                let topic = "\(mqttServer.topic)/\(mbd.topic)"
-                try await mqttClient.publish(MQTTMessage(topic: topic,
-                                                         payload: try publishedPayload.json(using: mbd),
-                                                         retain: retained))
-                publicationGate.recordSuccessfulPublication(topic: mbd.topic,
+                try await mqttConnection.publish(to: "\(topicPrefix)/\(definition.topic)",
+                                                 payload: .init(string: try publishedPayload.json(using: definition)),
+                                                 qos: .atMostOnce,
+                                                 retain: retained)
+                publicationGate.recordSuccessfulPublication(topic: definition.topic,
                                                              value: publishedPayload.value,
                                                              at: publicationDate)
             }
@@ -478,23 +476,29 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
             {
                 JLog.debug("Value did not change")
             }
-            let nextReadDate = mbd.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: mbd.interval)
-            modbusDefinitions[mbd.address]!.nextReadDate = nextReadDate
+            let nextReadDate = definition.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: definition.interval)
+            modbusDefinitions[definition.address]!.nextReadDate = nextReadDate
             JLog.debug("nextReadDate:\(nextReadDate)")
+        }
+        catch is CancellationError
+        {
+            return
         }
         catch
         {
+            if error is MQTTError
+            {
+                throw error
+            }
+
             errorCounter += 1
 
-            // Force the next retry to start from a fresh Modbus socket instead of
-            // relying on libmodbus recovery against a potentially stale session.
             if let modbusError = error as? ModbusError
             {
                 JLog.warning("Resetting Modbus connection after error: \(modbusError)")
                 await modbusDevice.disconnect()
             }
 
-            // Try to reset device if configured and error threshold reached
             if errorCounter == 7, let url = resetURL
             {
                 JLog.warning("Error threshold reached (\(errorCounter) errors), attempting device reset")
@@ -519,7 +523,7 @@ func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer:
 
             let waittime = 30.0 * Double(errorCounter)
             JLog.error("Waiting \(waittime) seconds")
-            try? await Task.sleep(nanoseconds: UInt64(waittime * Double(NSEC_PER_SEC)))
+            try await Task.sleep(nanoseconds: UInt64(waittime * Double(NSEC_PER_SEC)))
         }
     }
 }

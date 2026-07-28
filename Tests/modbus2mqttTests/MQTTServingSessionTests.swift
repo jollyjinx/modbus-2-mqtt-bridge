@@ -9,13 +9,15 @@ struct MQTTServingSessionTests
         case stopped
     }
 
+    private enum TestError: Error, Equatable, Sendable
+    {
+        case disconnected(String)
+    }
+
     @Test
     func disconnectCancelsWorkersAndEndsSession() async
     {
-        let (disconnectEvents, disconnectContinuation) = AsyncStream.makeStream(
-            of: MQTTServingSessionError.self,
-            bufferingPolicy: .bufferingNewest(1)
-        )
+        let (disconnectEvents, disconnectContinuation) = AsyncStream.makeStream(of: TestError.self)
         let (workerBlocker, workerBlockerContinuation) = AsyncStream.makeStream(of: Void.self)
         let (workerEvents, workerEventsContinuation) = AsyncStream.makeStream(
             of: WorkerEvent.self,
@@ -32,8 +34,14 @@ struct MQTTServingSessionTests
         let sessionTask = Task
         {
             try await runMQTTServingSession(
-                until: disconnectEvents,
                 workers: [
+                    {
+                        for await event in disconnectEvents
+                        {
+                            throw event
+                        }
+                        try Task.checkCancellation()
+                    },
                     {
                         workerEventsContinuation.yield(.started)
                         for await _ in workerBlocker {}
@@ -45,7 +53,7 @@ struct MQTTServingSessionTests
 
         #expect(await workerEventIterator.next() == .started)
 
-        let expectedError = MQTTServingSessionError.disconnected("broker restart")
+        let expectedError = TestError.disconnected("broker restart")
         disconnectContinuation.yield(expectedError)
         disconnectContinuation.finish()
 
@@ -54,7 +62,7 @@ struct MQTTServingSessionTests
             try await sessionTask.value
             Issue.record("Expected the serving session to end after MQTT disconnected")
         }
-        catch let error as MQTTServingSessionError
+        catch let error as TestError
         {
             #expect(error == expectedError)
         }
@@ -67,22 +75,20 @@ struct MQTTServingSessionTests
     }
 
     @Test
-    func bufferedDisconnectEndsSessionBeforeWorkersStart() async
+    func workerFailurePropagates() async
     {
-        let (disconnectEvents, disconnectContinuation) = AsyncStream.makeStream(
-            of: MQTTServingSessionError.self,
-            bufferingPolicy: .bufferingNewest(1)
-        )
-        let expectedError = MQTTServingSessionError.disconnected("connection closed during setup")
-        disconnectContinuation.yield(expectedError)
-        disconnectContinuation.finish()
+        let expectedError = TestError.disconnected("connection closed during setup")
 
         do
         {
-            try await runMQTTServingSession(until: disconnectEvents, workers: [])
+            try await runMQTTServingSession(workers: [
+                {
+                    throw expectedError
+                },
+            ])
             Issue.record("Expected the buffered MQTT disconnect to end the serving session")
         }
-        catch let error as MQTTServingSessionError
+        catch let error as TestError
         {
             #expect(error == expectedError)
         }
