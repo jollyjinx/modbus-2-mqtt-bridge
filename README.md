@@ -154,6 +154,9 @@ swift build
 swift test
 ```
 
+Maintainers can publish branch-tagged AMD64/ARM64 images to Gitmaster or GHCR with
+`scripts/build_and_push_image.sh`; see [the container build guide](docs/container-builds.md).
+
 The test suite includes JSON decoding, device configuration, publication policy, request routing, and bridge-level behavior. Tests and builds should not require live Modbus devices or an external MQTT broker unless a test explicitly documents that dependency.
 
 Start with [DOCUMENTATION.md](DOCUMENTATION.md) for the maintained documentation map. Agent-oriented routing is available in [AI/README.md](AI/README.md).

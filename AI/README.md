@@ -20,6 +20,7 @@ Use [DOCUMENTATION.md](../DOCUMENTATION.md) as the authoritative documentation i
 
 - Consumer setup, containers, common CLI modes, and supported devices: [README.md](../README.md)
 - Package targets and runtime flow: [docs/architecture.md](../docs/architecture.md)
+- Container build and publication workflow: [docs/container-builds.md](../docs/container-builds.md)
 - Multi-device ownership, routing, recovery, and validation: [docs/MULTI_DEVICE_ARCHITECTURE.md](../docs/MULTI_DEVICE_ARCHITECTURE.md)
 - Device-definition fields and examples: [docs/device-definitions.md](../docs/device-definitions.md)
 - MQTT write request/response contract: [docs/mqtt-request-response.md](../docs/mqtt-request-response.md)

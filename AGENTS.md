@@ -15,6 +15,7 @@ Use this skill when work touches `/Users/jolly/GitHub/modbus2mqtt`.
 - `DeviceDefinitions` contains bundled JSON device maps that must stay backward compatible unless a breaking change is intentional.
 - `Tests/modbus2mqttTests` covers JSON decoding and bridge-level behavior.
 - `modbus2mqtt.product.dockerfile` and `README.md` contain container/runtime examples; use Docker in workflows.
+- `scripts/build_and_push_image.sh` and its helpers publish branch-tagged multi-platform images to Gitmaster or GHCR.
 
 ## Working Rules
 
