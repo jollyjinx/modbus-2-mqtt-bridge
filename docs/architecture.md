@@ -33,7 +33,7 @@ related:
 
 ## MQTT Client Lifecycle
 
-The executable uses the upstream `swift-server-community/mqtt-nio` 3.x API. Each serving attempt opens an `MQTTConnection` with `withConnection(...)`, subscribes to the configured request topics, and runs the subscription consumer alongside the Modbus pollers in one throwing task group.
+The executable tracks the `main` branch of the `jollyjinx/mqtt-nio` fork and uses its mqtt-nio 3.x API. Each serving attempt opens an `MQTTConnection` with `withConnection(...)`, subscribes to the configured request topics, and runs the subscription consumer alongside the Modbus pollers in one throwing task group.
 
 mqtt-nio 3 delivers publish payloads as NIO `ByteBuffer` values. The bridge decodes request buffers as UTF-8 JSON and creates UTF-8 buffers for value and response publications. Topic shapes and JSON payload contracts remain owned by modbus2mqtt rather than the MQTT client library.
 
