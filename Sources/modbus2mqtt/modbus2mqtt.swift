@@ -114,7 +114,13 @@ struct modbus2mqtt: AsyncParsableCommand
 
         JLog.loglevel = logLevel
         signal(SIGUSR1, SIG_IGN)
-        signal(SIGUSR1, handleSIGUSR1)
+        let sigusr1Source = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+        sigusr1Source.setEventHandler
+        {
+            handleSIGUSR1(signal: SIGUSR1)
+        }
+        sigusr1Source.resume()
+        defer { sigusr1Source.cancel() }
 
         if logLevel != defaultLoglevel
         {
@@ -231,20 +237,17 @@ struct modbus2mqtt: AsyncParsableCommand
 
 func handleSIGUSR1(signal: Int32)
 {
-    DispatchQueue.main.async
+    JLog.notice("Received \(signal) signal.")
+    JLog.notice("Switching Log level from \(JLog.loglevel)")
+    switch JLog.loglevel
     {
-        JLog.notice("Received \(signal) signal.")
-        JLog.notice("Switching Log level from \(JLog.loglevel)")
-        switch JLog.loglevel
-        {
-            case .trace: JLog.loglevel = .info
-            case .debug: JLog.loglevel = .trace
-            case .info: JLog.loglevel = .debug
-            default: JLog.loglevel = .debug
-        }
-
-        JLog.notice("to \(JLog.loglevel)")
+        case .trace: JLog.loglevel = .info
+        case .debug: JLog.loglevel = .trace
+        case .info: JLog.loglevel = .debug
+        default: JLog.loglevel = .debug
     }
+
+    JLog.notice("to \(JLog.loglevel)")
 }
 
 func callResetURL(_ url: URL) async throws
