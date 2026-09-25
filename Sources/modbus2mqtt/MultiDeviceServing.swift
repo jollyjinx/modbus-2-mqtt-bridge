@@ -192,6 +192,7 @@ private func poll(device: RuntimeModbusDevice,
 
     while Task.isCancelled == false
     {
+        var attemptedDefinition: ModbusDefinition?
         do
         {
             try Task.checkCancellation()
@@ -214,6 +215,7 @@ private func poll(device: RuntimeModbusDevice,
                 try await Task.sleep(nanoseconds: UInt64(timeToWait * Double(NSEC_PER_SEC)))
             }
 
+            attemptedDefinition = definition
             let payload = try await device.endpoint.read(definition: definition,
                                                          deviceAddress: UInt16(device.configuration.modbusAddress))
             errorCounter = 0
@@ -250,7 +252,10 @@ private func poll(device: RuntimeModbusDevice,
         catch
         {
             errorCounter = min(errorCounter + 1, 10)
-            JLog.error("\(context) polling failed: \(error); consecutive errors: \(errorCounter)")
+            let registerContext = attemptedDefinition.map {
+                " [registerType=\($0.modbustype.rawValue) address=\($0.address) registerTopic=\(device.configuration.topic)/\($0.topic) definition=\(device.configuration.deviceDescriptionFile)]"
+            } ?? ""
+            JLog.error("\(context)\(registerContext) polling failed: \(error); consecutive errors: \(errorCounter)")
 
             if error is ModbusError
             {

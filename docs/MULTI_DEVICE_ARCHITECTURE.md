@@ -133,6 +133,13 @@ Logs include endpoint, unit, and topic context, for example:
 [10.112.1.2:502 unit=2 topic=counters/boiler]
 ```
 
+Polling errors also include the attempted register's `registerType`, decimal
+`address`, full `registerTopic`, and configured `definition` filename/path. These
+fields are logged at error level, so locating a rejected register in its JSON
+definition does not require enabling debug or trace logging. Register area is
+included because input and holding registers can share an address. The legacy
+single-device/RTU polling path reports the same register fields and unit address.
+
 ## Delivery sequence
 
 1. Remove global definition state and make payload encoding explicit.

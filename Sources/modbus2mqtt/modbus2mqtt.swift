@@ -502,6 +502,7 @@ private func poll(modbusDevice: ModbusDevice,
         }
         catch
         {
+            JLog.error("[unit=\(deviceAddress) registerType=\(definition.modbustype.rawValue) address=\(definition.address) registerTopic=\(topicPrefix)/\(definition.topic) definition=\(options.deviceDescriptionFile)] polling failed: \(error); consecutive errors: \(errorCounter + 1)")
             if error is MQTTError
             {
                 throw error
@@ -535,8 +536,6 @@ private func poll(modbusDevice: ModbusDevice,
             {
                 throw error
             }
-            JLog.error("got error:\(error) - ignoring errorcounter:\(errorCounter)")
-
             let waittime = 30.0 * Double(errorCounter)
             JLog.error("Waiting \(waittime) seconds")
             try await Task.sleep(nanoseconds: UInt64(waittime * Double(NSEC_PER_SEC)))

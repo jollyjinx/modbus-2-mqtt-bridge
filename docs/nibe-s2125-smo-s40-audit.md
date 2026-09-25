@@ -99,6 +99,37 @@ The writer now supports signed/unsigned 8-bit settings as complete 16-bit regist
 
 ## Regression verification
 
+### Live register rejection on bgbpi (2026-09-25)
+
+With revision `73ac869` deployed, a passive Modbus TCP capture identified the recurring
+`couldNotRead(error: "Illegal function")`: unit 1 at `172.16.100.2:502` rejects FC04
+input register 26 (`system/roomtemperature`, BT50). The request PDU was
+`04 00 1a 00 01`; its response was `84 01` (exception 01). Five subsequent read-only
+requests spaced one second apart confirmed FC04 address 1 succeeds, FC04 address 26
+fails twice, and FC03 holding address 26 succeeds with value 8. This is specific to
+the input reading, not a general FC04 failure or an input/holding address collision.
+No controller writes or deployment changes were made during diagnosis.
+
+The official SMO S40 table documents input 26, but actual availability depends on
+the controller and installed/activated accessories. An absent or inactive BT50 is
+a plausible explanation, not established by these probes; check menu 7.5.9's own
+register export before changing the bundled definition globally.
+
+At this revision, `MultiDeviceServing.poll` does not log individual register reads
+at debug/trace level, and its catch log omits the selected definition. SIGUSR1 does
+change the JLog level, but cannot reveal missing instrumentation. Every Modbus
+exception disconnects the endpoint and pauses this logical device for
+`30 * consecutiveErrors` seconds. Successful reads reset the counter, explaining
+the repeated value 1. Failed definitions keep their old due date, so an unavailable
+register can repeatedly delay polling and prevent other equally/slower-polled
+definitions from being reached. Future recovery should back off rejected registers
+individually and include register area/address/topic in error logs.
+
+The subsequent logging fix adds register area, decimal address, full MQTT topic,
+and definition filename/path to error-level polling messages in both serving
+paths. Retry scheduling remains unchanged; the live findings above describe the
+deployed revision before this fix.
+
 `NIBERegisterReadTests` runs a local FC04 server and passes responses through the actual dependency reader, device definition and MQTT JSON encoder. It covers a nonzero compressor-start count, distinct high/low words, captured runtime/energy patterns, an active defrost status, a nonzero alarm, negative temperature and signed 8-bit decoding. The original implementation fails these counter/byte checks; the corrections pass. No live heat pump or MQTT broker is required for these tests.
 
 The regression cases also cover every added input register, including percent pump speed, negative temperature and mapped pump/valve states. Physical counter totals remain unverified until a direct controller/display comparison is available.
