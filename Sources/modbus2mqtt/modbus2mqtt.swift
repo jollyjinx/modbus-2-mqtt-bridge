@@ -25,6 +25,7 @@ private enum ConfigurationError: Error
     case multipleMultiDeviceConfigurationSources
     case multiDeviceConfigurationConflictsWithLegacyDeviceOptions
     case invalidMQTTUnchangedPublishInterval(Double)
+    case invalidModbusResponseTimeout(Double)
 }
 
 extension JLog.Level: @retroactive ExpressibleByArgument
@@ -92,6 +93,9 @@ struct modbus2mqtt: AsyncParsableCommand
     @Option(name: .long, help: "Modbus Device Port number.")
     var modbusPort: UInt16 = 502
 
+    @Option(name: .long, help: "Maximum time in seconds to wait for a Modbus response.")
+    var modbusResponseTimeout: Double = 0.5
+
     @Option(name: .long, help: "Modbus Device Address.")
     var modbusAddress: UInt16 = 3
 
@@ -115,6 +119,12 @@ struct modbus2mqtt: AsyncParsableCommand
             throw ConfigurationError.invalidMQTTUnchangedPublishInterval(mqttUnchangedPublishInterval)
         }
 
+        guard modbusResponseTimeout.isFinite, modbusResponseTimeout > 0
+        else
+        {
+            throw ConfigurationError.invalidModbusResponseTimeout(modbusResponseTimeout)
+        }
+
         JLog.loglevel = logLevel
         let buildInformation = Self.buildInformation
         let revisionDescription = buildInformation.revision.map { " (revision: \($0))" } ?? ""
@@ -134,6 +144,7 @@ struct modbus2mqtt: AsyncParsableCommand
         {
             JLog.info("Loglevel: \(logLevel)")
         }
+        JLog.info("Modbus response timeout: \(modbusResponseTimeout) seconds")
 
         // Validate static configuration once so startup errors fail fast.
         let resetURL: URL?
@@ -216,11 +227,17 @@ struct modbus2mqtt: AsyncParsableCommand
                 {
                     let modbusDevice: ModbusDevice = if modbusDevicePath.isEmpty
                     {
-                        try ModbusDevice(networkAddress: modbusServer, port: modbusPort, deviceAddress: modbusAddress)
+                        try ModbusDevice(networkAddress: modbusServer,
+                                         port: modbusPort,
+                                         deviceAddress: modbusAddress,
+                                         responseTimeout: modbusResponseTimeout)
                     }
                     else
                     {
-                        try ModbusDevice(device: modbusDevicePath, slaveid: Int(modbusAddress), baudRate: modbusSerialSpeed)
+                        try ModbusDevice(device: modbusDevicePath,
+                                         slaveid: Int(modbusAddress),
+                                         baudRate: modbusSerialSpeed,
+                                         responseTimeout: modbusResponseTimeout)
                     }
 
                     try await startServing(modbusDevice: modbusDevice, deviceAddress: modbusAddress, mqttServer: mqttServer, resetURL: resetURL, options: self)

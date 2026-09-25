@@ -91,7 +91,8 @@ func startServing(configurations: [ModbusDeviceConfiguration],
         {
             endpoint = try ModbusDevice(networkAddress: configuration.networkAddress,
                                         port: configuration.port,
-                                        deviceAddress: UInt16(configuration.modbusAddress))
+                                        deviceAddress: UInt16(configuration.modbusAddress),
+                                        responseTimeout: options.modbusResponseTimeout)
             endpoints[configuration.endpoint] = endpoint
         }
 

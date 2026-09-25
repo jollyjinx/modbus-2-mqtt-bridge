@@ -68,10 +68,16 @@ Use `--modbus-server`, `--modbus-port`, and `--modbus-address` for Modbus TCP. F
 modbus2mqtt \
   --modbus-server meter.local \
   --modbus-address 1 \
+  --modbus-response-timeout 2 \
   --mqtt-servername mqtt.local \
   --topic meters/main \
   --device-description-file b+ge-tech.sd100-00b.json
 ```
+
+`--modbus-response-timeout` is the maximum time in seconds to wait for an
+individual Modbus response. It defaults to `0.5` and applies to every endpoint
+in multi-device mode. Increase it for devices that occasionally need longer to
+answer; for example, use `--modbus-response-timeout 2` for a two-second limit.
 
 Broker credentials are available through `--mqtt-username` and `--mqtt-password`. Run `modbus2mqtt --help` for the complete, version-matched option list.
 
