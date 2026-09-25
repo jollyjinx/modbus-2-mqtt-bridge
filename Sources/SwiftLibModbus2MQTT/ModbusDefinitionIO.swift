@@ -15,6 +15,7 @@ public enum ModbusWriteValue: Equatable, Sendable
     case asciiString(String, count: Int)
     case uint16(UInt16)
     case int16(Int16)
+    case int32(Int32)
 }
 
 public extension ModbusDefinition
@@ -34,6 +35,24 @@ public extension ModbusDefinition
                 guard let length
                 else { throw ModbusDefinitionIOError.missingLength }
                 return .asciiString(value, count: length)
+
+            case let (.uint8, .decimal(value)):
+                let factored = hasFactor ? value / factor! : value
+                guard let integerValue = UInt8(factored.description)
+                else { throw ModbusDefinitionIOError.valueTypeConversionError }
+                return .uint16(UInt16(integerValue))
+
+            case let (.int8, .decimal(value)):
+                let factored = hasFactor ? value / factor! : value
+                guard let integerValue = Int8(factored.description)
+                else { throw ModbusDefinitionIOError.valueTypeConversionError }
+                return .int16(Int16(integerValue))
+
+            case let (.int32, .decimal(value)):
+                let factored = hasFactor ? value / factor! : value
+                guard let integerValue = Int32(factored.description)
+                else { throw ModbusDefinitionIOError.valueTypeConversionError }
+                return .int32(integerValue)
 
             case let (.uint16, .decimal(value)):
                 let factored = hasFactor ? value / factor! : value
@@ -64,8 +83,11 @@ public extension ModbusDefinition
                     default: throw ModbusDefinitionIOError.valueTypeConversionError
                 }
 
-            case let (.uint16, .string(value)),
-                 let (.int16, .string(value)):
+            case let (.uint8, .string(value)),
+                 let (.int8, .string(value)),
+                 let (.uint16, .string(value)),
+                 let (.int16, .string(value)),
+                 let (.int32, .string(value)):
                 guard let map,
                       let mappedValue = map.first(where: { $0.value == value })?.key
                 else
@@ -99,12 +121,14 @@ public extension ModbusDevice
                 value = .bool(try first(values))
 
             case .uint8:
-                let values: [UInt8] = try await readRegisters(from: definition.address, count: 1, type: definition.modbustype, endianness: endianness, deviceAddress: deviceAddress)
-                value = .uint8(try first(values))
+                // Numeric 8-bit values occupy the low byte of a 16-bit register.
+                // Reading UInt8 directly selects the first byte of the wire representation.
+                let values: [UInt16] = try await readRegisters(from: definition.address, count: 1, type: definition.modbustype, endianness: endianness, deviceAddress: deviceAddress)
+                value = .uint8(UInt8(truncatingIfNeeded: try first(values)))
 
             case .int8:
-                let values: [Int8] = try await readRegisters(from: definition.address, count: 1, type: definition.modbustype, endianness: endianness, deviceAddress: deviceAddress)
-                value = .int8(try first(values))
+                let values: [UInt16] = try await readRegisters(from: definition.address, count: 1, type: definition.modbustype, endianness: endianness, deviceAddress: deviceAddress)
+                value = .int8(Int8(truncatingIfNeeded: try first(values)))
 
             case .uint16:
                 let values: [UInt16] = try await readRegisters(from: definition.address, count: 1, type: definition.modbustype, endianness: endianness, deviceAddress: deviceAddress)
@@ -179,6 +203,9 @@ public extension ModbusDevice
                 try await writeRegisters(to: definition.address, arrayToWrite: [value], endianness: definition.endianness ?? .bigEndian, deviceAddress: deviceAddress)
 
             case let .int16(value):
+                try await writeRegisters(to: definition.address, arrayToWrite: [value], endianness: definition.endianness ?? .bigEndian, deviceAddress: deviceAddress)
+
+            case let .int32(value):
                 try await writeRegisters(to: definition.address, arrayToWrite: [value], endianness: definition.endianness ?? .bigEndian, deviceAddress: deviceAddress)
         }
     }

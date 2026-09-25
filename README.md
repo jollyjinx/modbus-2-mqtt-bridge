@@ -54,6 +54,12 @@ swift build -c release --product modbus2mqtt
 .build/release/modbus2mqtt --help
 ```
 
+The bridge logs its version and available Git revision at startup at `notice` level.
+Run `modbus2mqtt --version` to print just the version without connecting to devices.
+Published images use the Git commit timestamp in `YYYY.MM.DD.HHMMSS` form. Local builds
+report `development` unless `MODBUS2MQTT_VERSION` is set; `MODBUS2MQTT_REVISION` optionally
+provides the revision, following the same environment-based convention as scannerserver.
+
 ## Single-device configuration
 
 Use `--modbus-server`, `--modbus-port`, and `--modbus-address` for Modbus TCP. For RTU, provide `--modbus-device-path` and optionally `--modbus-serial-speed`.
@@ -100,6 +106,7 @@ See [the multi-device architecture](docs/MULTI_DEVICE_ARCHITECTURE.md) for valid
 | `lambda.json` | Lambda Eureka heat pumps |
 | `lambda.solartherm.json` | Lambda heat pump with solar thermal integration |
 | `nibe.s2125.json` | NIBE S2125 air/water heat pump |
+| `nibe.S2125-SMO-S40.json` | NIBE S2125 with SMO S40 controller (slave 1) |
 | `phoenix.evcharger.json` | Phoenix Contact EV charge controller |
 | `sma.sunnyboy.json` / `.all.json` | SMA Sunny Boy inverter |
 | `sma.sunnystore.json` / `.all.json` | SMA Sunny Boy Storage |

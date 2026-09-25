@@ -76,3 +76,11 @@ Run `--help` for the complete interface:
 that value as `MODBUS2MQTT_VERSION` and the full commit SHA as `VCS_REF`. The runtime image exposes
 them through the `MODBUS2MQTT_VERSION` and `MODBUS2MQTT_REVISION` environment variables and matching
 OCI image labels. A dirty worktree is called out and receives a `-dirty` revision suffix.
+
+The GitHub publication workflow also passes the commit timestamp and revision into the image.
+At startup, the bridge reads these environment variables and logs
+`Starting modbus2mqtt <version> (revision: <revision>)` at `notice` level. `modbus2mqtt --version`
+prints the version without starting the bridge. Missing or blank versions fall back to
+`development`; missing or blank revisions are omitted from the startup message. Plain local
+image builds retain the Dockerfile defaults (`development` and `unknown`) unless build arguments
+are supplied.

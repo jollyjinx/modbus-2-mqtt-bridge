@@ -22,6 +22,7 @@ Use this skill when work touches `/Users/jolly/GitHub/modbus2mqtt`.
 - Assume Swift 6.2 with strict concurrency enabled.
 - Favor small fixes that improve long-running bridge resilience under transient Modbus or MQTT failures.
 - Preserve published MQTT topic shapes and request/response behavior unless explicitly asked to change the external contract.
+- Include applicable settings documented as R/W with `modbusaccess: readwrite`; do not require users to edit JSON to enable documented writes. Ensure the writer supports their value types, scaling and word order. Input and holding registers may share an address; use `readByRegister(from:)` and `registerKey` for loading and polling.
 - When diagnosing transport issues, inspect checked out dependency code under `.build/checkouts/SwiftLibModbus` and `.build/checkouts/mqtt-nio` before changing package-local logic.
 - Prefer package-local recovery or instrumentation before forking dependency behavior.
 

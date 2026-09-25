@@ -13,6 +13,30 @@ public enum MQTTVisibilty: String, Encodable, Decodable, Sendable
 
 public typealias ValueMap = [String: String]
 
+/// Modbus input, holding, coil and discrete areas have independent address spaces.
+public struct ModbusRegisterKey: Hashable, Sendable
+{
+    public let type: ModbusRegisterType
+    public let address: Int
+
+    public init(type: ModbusRegisterType, address: Int)
+    {
+        self.type = type
+        self.address = address
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool
+    {
+        lhs.type.rawValue == rhs.type.rawValue && lhs.address == rhs.address
+    }
+
+    public func hash(into hasher: inout Hasher)
+    {
+        hasher.combine(type.rawValue)
+        hasher.combine(address)
+    }
+}
+
 public struct ModbusDefinition: Encodable, Sendable
 {
     public enum ModbusAccess: String, Encodable, Decodable, Sendable
@@ -129,16 +153,28 @@ extension ModbusDefinition
 
     public static func read(from url: URL) throws -> [Int: ModbusDefinition]
     {
+        // Preserve the address-only API for callers with one register area.
+        let definitions = try readByRegister(from: url)
+        return try Dictionary(definitions.values.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
+    }
+
+    public static func readByRegister(from url: URL) throws -> [ModbusRegisterKey: ModbusDefinition]
+    {
         let jsonData = try Data(contentsOf: url)
         var modbusDefinitions = try JSONDecoder().decode([ModbusDefinition].self, from: jsonData)
         modbusDefinitions = modbusDefinitions.map { var mbd = $0; mbd.nextReadDate = .distantPast; return mbd }
 
-        return try Dictionary(modbusDefinitions.map { ($0.address, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
+        return try Dictionary(modbusDefinitions.map { ($0.registerKey, $0) }, uniquingKeysWith: { throw ModbusDefinitionError.duplicateModbusAddressDefined($0, $1) })
     }
 }
 
 public extension ModbusDefinition
 {
+    var registerKey: ModbusRegisterKey
+    {
+        ModbusRegisterKey(type: modbustype, address: address)
+    }
+
     var hasFactor: Bool
     {
         factor != nil && factor! != 0 && factor! != 1

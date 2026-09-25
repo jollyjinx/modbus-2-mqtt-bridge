@@ -64,6 +64,24 @@ struct ModbusDefinitionIOTests
         #expect(try definition.writeValue(from: .string("value")) == .asciiString("value", count: 8))
     }
 
+    @Test(arguments: ["uint8", "int8", "int32"])
+    func rejectsFractionalAndOutOfRangeIntegerWrites(valueType: String) throws
+    {
+        let definition = try makeDefinition(valueType: valueType)
+        for value in [Decimal(string: "1.5")!, Decimal(4_294_967_296)]
+        {
+            #expect(throws: ModbusDefinitionIOError.valueTypeConversionError)
+            {
+                try definition.writeValue(from: .decimal(value))
+            }
+        }
+        let outOfRange: Decimal = valueType == "uint8" ? -1 : (valueType == "int8" ? 128 : -2_147_483_649)
+        #expect(throws: ModbusDefinitionIOError.valueTypeConversionError)
+        {
+            try definition.writeValue(from: .decimal(outOfRange))
+        }
+    }
+
     @Test(arguments: [
         (Float32(1_234.3344), Decimal(100), Decimal(1_200)),
         (Float32(1_251), Decimal(100), Decimal(1_300)),

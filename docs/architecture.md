@@ -52,3 +52,11 @@ If the broker closes the connection, the subscription's async sequence throws. T
 ## Recovery Behavior
 
 The executable is designed as a long-running bridge. Modbus communication failures are counted, repeated failures can trigger `--device-reset-url`, and the bridge resumes attempts after delays rather than treating transient failures as a reason to stop the process. MQTT connection and subscription failures end the current serving attempt so the outer service loop can establish a fresh scoped connection.
+
+## Runtime Log Level
+
+`SIGUSR1` cycles the log level through `debug`, `trace`, and `info`; other starting levels switch to `debug`. The executable ignores the default POSIX action and retains a `DispatchSourceSignal` on a dedicated serial queue for the lifetime of `run()`. Logging and level changes happen in that dispatch callback.
+
+JLog evaluates message autoclosures while holding its nonrecursive logger mutex. Read `JLog.loglevel` into a local value before interpolating it into any JLog message. Reading it inside the message attempts to acquire the same mutex again, which traps on Linux and can trap or deadlock on macOS. Moving the callback to another queue alone cannot fix that recursive acquisition.
+
+After `swift build`, run `python3 scripts/test_sigusr1.py .build/debug/modbus2mqtt` to exercise real signal delivery, logging, and repeated level transitions in child processes. The check uses reserved loopback ports without listeners and runs during the bridge's retry delay; it needs neither Modbus hardware nor an MQTT broker. It also accepts a release executable path and runs on macOS or Linux.

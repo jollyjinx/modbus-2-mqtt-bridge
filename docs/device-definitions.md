@@ -27,6 +27,7 @@ Device definition files control which Modbus values are exposed over MQTT. Bundl
 - `lambda.json`: Lambda Eureka heat pumps.
 - `lambda.solartherm.json`: Lambda heat pump with solar thermal integration.
 - `nibe.s2125.json`: NIBE S2125 air/water heat pump.
+- `nibe.S2125-SMO-S40.json`: NIBE S2125 with SMO S40 controller, slave 1; 46 input-register readings and 36 read/write holding-register settings incorporating the 2026 technical manual. See the [register audit](nibe-s2125-smo-s40-audit.md) for decoding corrections, topics and firmware-specific caveats.
 - `phoenix.evcharger.json`: Phoenix Contact electric vehicle charge controller.
 - `sma.sunnyboy.json` and `sma.sunnyboy.all.json`: SMA Sunny Boy inverter definitions.
 - `sma.sunnystore.json` and `sma.sunnystore.all.json`: SMA Sunny Boy Storage definitions.
@@ -51,6 +52,10 @@ Common fields include:
 - `publishalways`: optional override that publishes after every poll.
 - `topic`: MQTT topic suffix for the value.
 - `title`: human-readable label.
+
+Use `readwrite` for applicable settings documented as R/W. These entries are polled normally and accept MQTT write requests without editing the JSON. The integer writer supports `uint8`, `int8`, `uint16`, `int16` and `int32`, including inverse scaling and mapped string values. Eight-bit settings occupy one 16-bit register; signed values are sign-extended. An `int32` write uses two registers in the configured word order.
+
+Register identity is the pair `(modbustype, address)`: input 26 and holding 26 are different registers. The runtime uses `ModbusDefinition.readByRegister(from:)`, keyed by `ModbusRegisterKey`, and updates polling dates through each definition's `registerKey`. Duplicate addresses within one area remain errors. The legacy `read(from:)` API is retained for address-only callers and rejects cross-area collisions rather than dropping an entry. Give each definition a distinct MQTT topic.
 - `map`: optional mapping from raw values to named values.
 - `bits`: optional mapping from individual bits or bit ranges to named fields.
 

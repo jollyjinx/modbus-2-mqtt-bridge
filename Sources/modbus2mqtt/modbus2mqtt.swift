@@ -43,6 +43,9 @@ extension JLog.Level: @retroactive ExpressibleByArgument
 @main
 struct modbus2mqtt: AsyncParsableCommand
 {
+    static let buildInformation = Modbus2MQTTBuildInformation()
+    static let configuration = CommandConfiguration(version: buildInformation.version)
+
     @Option(help: "Set the log level.") var logLevel: JLog.Level = defaultLoglevel
 
     @Option(name: .long, help: "MQTT Server hostname")
@@ -113,8 +116,13 @@ struct modbus2mqtt: AsyncParsableCommand
         }
 
         JLog.loglevel = logLevel
+        let buildInformation = Self.buildInformation
+        let revisionDescription = buildInformation.revision.map { " (revision: \($0))" } ?? ""
+        JLog.notice("Starting modbus2mqtt \(buildInformation.version)\(revisionDescription)")
+
         signal(SIGUSR1, SIG_IGN)
-        let sigusr1Source = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+        let signalQueue = DispatchQueue(label: "modbus2mqtt.signal-handling")
+        let sigusr1Source = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: signalQueue)
         sigusr1Source.setEventHandler
         {
             handleSIGUSR1(signal: SIGUSR1)
@@ -238,16 +246,21 @@ struct modbus2mqtt: AsyncParsableCommand
 func handleSIGUSR1(signal: Int32)
 {
     JLog.notice("Received \(signal) signal.")
-    JLog.notice("Switching Log level from \(JLog.loglevel)")
-    switch JLog.loglevel
+    // JLog evaluates message autoclosures under its nonrecursive logger mutex.
+    // Snapshot the level first: reading JLog.loglevel inside a message relocks it.
+    let previousLogLevel = JLog.loglevel
+    JLog.notice("Switching Log level from \(previousLogLevel)")
+    let nextLogLevel: JLog.Level
+    switch previousLogLevel
     {
-        case .trace: JLog.loglevel = .info
-        case .debug: JLog.loglevel = .trace
-        case .info: JLog.loglevel = .debug
-        default: JLog.loglevel = .debug
+        case .trace: nextLogLevel = .info
+        case .debug: nextLogLevel = .trace
+        case .info: nextLogLevel = .debug
+        default: nextLogLevel = .debug
     }
 
-    JLog.notice("to \(JLog.loglevel)")
+    JLog.loglevel = nextLogLevel
+    JLog.notice("to \(nextLogLevel)")
 }
 
 func callResetURL(_ url: URL) async throws
@@ -290,7 +303,7 @@ func callResetURL(_ url: URL) async throws
 func startServing(modbusDevice: ModbusDevice, deviceAddress: UInt16, mqttServer: MQTTDevice, resetURL: URL?, options: modbus2mqtt) async throws
 {
     let deviceDescriptionURL = try fileURLFromPath(path: options.deviceDescriptionFile)
-    let modbusDefinitions = try ModbusDefinition.read(from: deviceDescriptionURL)
+    let modbusDefinitions = try ModbusDefinition.readByRegister(from: deviceDescriptionURL)
 
     JLog.debug("modbusdefinitions:\(modbusDefinitions)")
 
@@ -411,7 +424,7 @@ private func serveMQTTRequests(subscription: MQTTSubscription,
 
 private func poll(modbusDevice: ModbusDevice,
                   deviceAddress: UInt16,
-                  definitions: [Int: ModbusDefinition],
+                  definitions: [ModbusRegisterKey: ModbusDefinition],
                   mqttConnection: MQTTConnection,
                   topicPrefix: String,
                   resetURL: URL?,
@@ -480,7 +493,7 @@ private func poll(modbusDevice: ModbusDevice,
                 JLog.debug("Value did not change")
             }
             let nextReadDate = definition.interval == 0 ? .distantFuture : Date(timeIntervalSinceNow: definition.interval)
-            modbusDefinitions[definition.address]!.nextReadDate = nextReadDate
+            modbusDefinitions[definition.registerKey]!.nextReadDate = nextReadDate
             JLog.debug("nextReadDate:\(nextReadDate)")
         }
         catch is CancellationError

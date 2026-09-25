@@ -9,7 +9,7 @@ private struct RuntimeModbusDevice: Sendable
     let configuration: ModbusDeviceConfiguration
     let endpoint: ModbusDevice
     let recovery: EndpointRecoveryCoordinator
-    let definitions: [Int: ModbusDefinition]
+    let definitions: [ModbusRegisterKey: ModbusDefinition]
 }
 
 private actor EndpointRecoveryCoordinator
@@ -108,7 +108,7 @@ func startServing(configurations: [ModbusDeviceConfiguration],
         }
 
         let definitionURL = try fileURLFromPath(path: configuration.deviceDescriptionFile)
-        let definitions = try ModbusDefinition.read(from: definitionURL)
+        let definitions = try ModbusDefinition.readByRegister(from: definitionURL)
         guard definitions.isEmpty == false
         else { throw MultiDeviceServingError.emptyDefinitionFile(configuration.deviceDescriptionFile) }
 
@@ -239,7 +239,7 @@ private func poll(device: RuntimeModbusDevice,
                                                              at: publicationDate)
             }
 
-            definitions[definition.address]!.nextReadDate = definition.interval == 0
+            definitions[definition.registerKey]!.nextReadDate = definition.interval == 0
                 ? .distantFuture
                 : Date(timeIntervalSinceNow: definition.interval)
         }

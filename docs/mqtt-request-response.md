@@ -44,6 +44,10 @@ The request contains a timestamp, request id, target value topic, and new value:
 
 The target topic is matched against writable device definitions. The value is converted to the Modbus type defined for that address before being written.
 
+Definitions with `modbusaccess: readwrite` are both polled and writable. Numeric requests use the same engineering units as readings; the writer divides by the definition's factor before checking the integer range. Mapped setting names can be supplied as strings. Supported integer writes are `uint8`, `int8`, `uint16`, `int16` and `int32`; multi-register writes honor the configured word order.
+
+For the NIBE SMO S40 definition, target `settings/operatingmode` with `"AUTO"`, `"MANUAL"` or `"ADDITIONAL_HEAT_ONLY"` (numeric 0, 1 or 2 also work). Other settings include `settings/heatingcurve`, `settings/heatingcurveoffset`, `settings/hotwaterdemand` and `settings/degreeminutes`. Use a current timestamp and new UUID for every request. The controller must permit Modbus writes.
+
 ## Swift Models
 
 The request and response models are defined in `MQTTRequestResponse.swift`.
@@ -65,4 +69,3 @@ struct MQTTResponse: Encodable, Decodable {
 ```
 
 The response uses the same `id` as the request. Request timestamps must be within the configured MQTT request TTL.
-
