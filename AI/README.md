@@ -23,6 +23,7 @@ Use [DOCUMENTATION.md](../DOCUMENTATION.md) as the authoritative documentation i
 - Container build and publication workflow: [docs/container-builds.md](../docs/container-builds.md)
 - Multi-device ownership, routing, recovery, and validation: [docs/MULTI_DEVICE_ARCHITECTURE.md](../docs/MULTI_DEVICE_ARCHITECTURE.md)
 - Device-definition fields and examples: [docs/device-definitions.md](../docs/device-definitions.md)
+- NIBE S2125 / SMO S40 exact-device register evidence and CSV catalogue: [docs/nibe-s2125-smo-s40-audit.md](../docs/nibe-s2125-smo-s40-audit.md)
 - MQTT write request/response contract: [docs/mqtt-request-response.md](../docs/mqtt-request-response.md)
 - Unchanged-value publication design and implementation record: [docs/mqtt-unchanged-publish-interval-plan.md](../docs/mqtt-unchanged-publish-interval-plan.md)
 - Documentation conventions: [docs/documentation-style.md](../docs/documentation-style.md)

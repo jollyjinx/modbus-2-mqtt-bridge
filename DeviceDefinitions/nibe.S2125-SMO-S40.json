@@ -7,7 +7,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "system/outdoortemperature",
         "title": "Current Outdoor Temperature (BT1)"
     },
@@ -19,7 +19,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "hotwater/top",
         "title": "Hot Water Top (BT7)"
     },
@@ -31,7 +31,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "hotwater/charging",
         "title": "Hot Water Charging (BT6)"
     },
@@ -44,6 +44,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "DM",
         "topic": "settings/degreeminutes",
         "title": "Degree Minutes"
     },
@@ -52,8 +53,10 @@
         "modbustype": "holding",
         "modbusaccess": "readwrite",
         "valuetype": "int16",
+        "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "DM",
         "topic": "settings/degreeminutescooling",
         "title": "Degree Minutes Cooling"
     },
@@ -78,18 +81,6 @@
         "title": "Heating Curve"
     },
     {
-        "address": 26,
-        "modbustype": "input",
-        "modbusaccess": "read",
-        "valuetype": "int16",
-        "factor": 0.1,
-        "mqtt": "visible",
-        "interval": 60,
-        "unit": "ºC",
-        "topic": "system/roomtemperature",
-        "title": "Room Temperature (BT50)"
-    },
-    {
         "address": 30,
         "modbustype": "holding",
         "modbusaccess": "readwrite",
@@ -107,7 +98,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "settings/supplytemperatureminimum",
         "title": "Minimum Supply Temperature"
     },
@@ -119,7 +110,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 300,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "system/averageoutdoortemperature",
         "title": "Average Outdoor Temperature (BT1)"
     },
@@ -131,7 +122,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "settings/supplytemperaturemaximum",
         "title": "Maximum Supply Temperature"
     },
@@ -142,8 +133,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point1",
-        "title": "Custom Heating Curve Point 1 (Register 39)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point7",
+        "title": "Custom Heating Curve Point 7"
     },
     {
         "address": 39,
@@ -153,7 +145,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "system/externalsupplyline",
         "title": "External Supply Line (BT25)"
     },
@@ -164,8 +156,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point2",
-        "title": "Custom Heating Curve Point 2 (Register 40)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point6",
+        "title": "Custom Heating Curve Point 6"
     },
     {
         "address": 40,
@@ -175,7 +168,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "l/m",
+        "unit": "l/min",
         "topic": "system/flowsensor",
         "title": "Flow Sensor (BF1)"
     },
@@ -186,8 +179,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point3",
-        "title": "Custom Heating Curve Point 3 (Register 41)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point5",
+        "title": "Custom Heating Curve Point 5"
     },
     {
         "address": 42,
@@ -196,8 +190,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
+        "unit": "°C",
         "topic": "settings/customheatingcurve/point4",
-        "title": "Custom Heating Curve Point 4 (Register 42)"
+        "title": "Custom Heating Curve Point 4"
     },
     {
         "address": 43,
@@ -206,8 +201,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point5",
-        "title": "Custom Heating Curve Point 5 (Register 43)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point3",
+        "title": "Custom Heating Curve Point 3"
     },
     {
         "address": 44,
@@ -216,8 +212,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point6",
-        "title": "Custom Heating Curve Point 6 (Register 44)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point2",
+        "title": "Custom Heating Curve Point 2"
     },
     {
         "address": 45,
@@ -226,8 +223,9 @@
         "valuetype": "int8",
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/customheatingcurve/point7",
-        "title": "Custom Heating Curve Point 7 (Register 45)"
+        "unit": "°C",
+        "topic": "settings/customheatingcurve/point1",
+        "title": "Custom Heating Curve Point 1"
     },
     {
         "address": 56,
@@ -254,6 +252,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "°C",
         "topic": "settings/hotwaterstarttemperature",
         "title": "Hot Water Start Temperature (Normal)"
     },
@@ -265,6 +264,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "°C",
         "topic": "settings/hotwaterstoptemperature",
         "title": "Hot Water Stop Temperature (Normal)"
     },
@@ -276,7 +276,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "system/returnline",
         "title": "Return Temperature (BT71)"
     },
@@ -285,33 +285,22 @@
         "modbustype": "holding",
         "modbusaccess": "readwrite",
         "valuetype": "uint8",
-        "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/heatingperiod",
-        "title": "Heating Period Time"
+        "unit": "min",
+        "topic": "settings/hotwaterperiod",
+        "title": "Hot Water Period Time"
     },
     {
         "address": 93,
         "modbustype": "holding",
         "modbusaccess": "readwrite",
         "valuetype": "uint8",
-        "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "topic": "settings/hotwaterperiod",
-        "title": "Hot Water Period Time"
-    },
-    {
-        "address": 94,
-        "modbustype": "holding",
-        "modbusaccess": "readwrite",
-        "valuetype": "uint8",
-        "factor": 0.1,
-        "mqtt": "visible",
-        "interval": 60,
-        "topic": "settings/coolingperiod",
-        "title": "Cooling Period Time"
+        "unit": "min",
+        "topic": "settings/heatingperiod",
+        "title": "Heating Period Time"
     },
     {
         "address": 97,
@@ -320,6 +309,7 @@
         "valuetype": "int16",
         "mqtt": "visible",
         "interval": 60,
+        "unit": "DM",
         "topic": "settings/compressorstartdegreeminutes",
         "title": "Compressor Start Degree Minutes"
     },
@@ -366,17 +356,6 @@
         "title": "Allow Cooling (Manual Mode)"
     },
     {
-        "address": 183,
-        "modbustype": "holding",
-        "modbusaccess": "readwrite",
-        "valuetype": "uint8",
-        "factor": 0.1,
-        "mqtt": "visible",
-        "interval": 60,
-        "topic": "settings/coolingstarttemperature",
-        "title": "Auto Mode Cooling Start Temperature"
-    },
-    {
         "address": 184,
         "modbustype": "holding",
         "modbusaccess": "readwrite",
@@ -384,6 +363,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "°C",
         "topic": "settings/heatingstoptemperature",
         "title": "Auto Mode Heating Stop Temperature"
     },
@@ -395,6 +375,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
+        "unit": "°C",
         "topic": "settings/additionalheatstoptemperature",
         "title": "Auto Mode Additional Heat Stop Temperature"
     },
@@ -564,7 +545,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/lowpressdew",
         "title": "Low Press (EB101 BP8 Dew)"
     },
@@ -576,7 +557,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/highpressuretemperature",
         "title": "High Pressure Temperature (EB101-BP9)"
     },
@@ -588,7 +569,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/injection",
         "title": "Injection Temperature (EB101-BT81)"
     },
@@ -600,7 +581,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/evaporatorout",
         "title": "Evaporator Outlet (EB101-BT84)"
     },
@@ -611,6 +592,7 @@
         "valuetype": "int16",
         "mqtt": "visible",
         "interval": 60,
+        "unit": "DM",
         "topic": "settings/additionalheatstartdegreeminutes",
         "title": "Additional Heat Start Degree Minutes"
     },
@@ -680,7 +662,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/returnline",
         "title": "Return Temperature (EB101-BT3)"
     },
@@ -692,7 +674,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/supplyline",
         "title": "Condenser Supply Line (EB101-BT12)"
     },
@@ -704,7 +686,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/discharge",
         "title": "Discharge (EB101-BT14)"
     },
@@ -716,7 +698,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/liquidline",
         "title": "Liquid Line (EB101-BT15)"
     },
@@ -728,7 +710,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/suctiongas",
         "title": "Suction Gas (EB101-BT17)"
     },
@@ -758,9 +740,8 @@
         "address": 1491,
         "modbustype": "input",
         "modbusaccess": "read",
-        "valuetype": "int32",
+        "valuetype": "uint32",
         "endianness": "littleEndian",
-        "factor": 0.1,
         "mqtt": "visible",
         "interval": 300,
         "unit": "h",
@@ -773,7 +754,6 @@
         "modbusaccess": "read",
         "valuetype": "uint32",
         "endianness": "littleEndian",
-        "factor": 0.1,
         "mqtt": "visible",
         "interval": 300,
         "unit": "h",
@@ -797,6 +777,14 @@
         "valuetype": "uint8",
         "mqtt": "visible",
         "interval": 30,
+        "map": {
+            "0": "OFF",
+            "1": "HEATING",
+            "2": "HOT_WATER",
+            "3": "POOL_1",
+            "4": "POOL_2",
+            "5": "EXTERNAL_CONTROL"
+        },
         "topic": "heatpump/compressorrequested",
         "title": "Compressor Requested (EB101-EP14)"
     },
@@ -834,7 +822,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/outdoortemperature",
         "title": "Outdoor Temperature (EB101-BT28)"
     },
@@ -846,7 +834,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 30,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "heatpump/evaporator",
         "title": "Evaporator Inlet (EB101-BT16)"
     },
@@ -915,7 +903,7 @@
         "address": 1975,
         "modbustype": "input",
         "modbusaccess": "read",
-        "valuetype": "uint16",
+        "valuetype": "int16",
         "mqtt": "visible",
         "interval": 30,
         "topic": "alarm/number",
@@ -938,6 +926,15 @@
         "valuetype": "uint8",
         "mqtt": "visible",
         "interval": 300,
+        "map": {
+            "0": "SUCCESSFUL",
+            "1": "LOW_SUPPLY",
+            "2": "LOW_RETURN",
+            "3": "LOW_FLOW",
+            "4": "LOW_LP",
+            "5": "MAX_TIME",
+            "255": "NOT_ACCESSIBLE"
+        },
         "topic": "heatpump/lastdefrost",
         "title": "Last Defrost Heat Pump 1"
     },
@@ -973,7 +970,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "settings/calculatedheatingsupplytemperature",
         "title": "Control Calculated Supply Temperature: Heating"
     },
@@ -985,7 +982,7 @@
         "factor": 0.1,
         "mqtt": "visible",
         "interval": 60,
-        "unit": "ºC",
+        "unit": "°C",
         "topic": "settings/calculatedcoolingsupplytemperature",
         "title": "Control Calculated Supply Temperature: Cooling"
     }

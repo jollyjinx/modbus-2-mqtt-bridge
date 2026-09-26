@@ -27,7 +27,7 @@ Device definition files control which Modbus values are exposed over MQTT. Bundl
 - `lambda.json`: Lambda Eureka heat pumps.
 - `lambda.solartherm.json`: Lambda heat pump with solar thermal integration.
 - `nibe.s2125.json`: NIBE S2125 air/water heat pump.
-- `nibe.S2125-SMO-S40.json`: NIBE S2125 with SMO S40 controller, slave 1; 46 input-register readings and 36 read/write holding-register settings incorporating the 2026 technical manual. See the [register audit](nibe-s2125-smo-s40-audit.md) for decoding corrections, topics and firmware-specific caveats.
+- `nibe.S2125-SMO-S40.json`: NIBE S2125 with SMO S40 controller, slave 1; 45 input-register readings and 34 read/write holding-register settings verified against this controller's REST metadata and menu 7.5.9 USB export. See the [register audit](nibe-s2125-smo-s40-audit.md) and [English device register catalogue](nibe-s2125-smo-s40-device-registers.csv).
 - `phoenix.evcharger.json`: Phoenix Contact electric vehicle charge controller.
 - `sma.sunnyboy.json` and `sma.sunnyboy.all.json`: SMA Sunny Boy inverter definitions.
 - `sma.sunnystore.json` and `sma.sunnystore.all.json`: SMA Sunny Boy Storage definitions.

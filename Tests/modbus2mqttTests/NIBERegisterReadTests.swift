@@ -17,8 +17,8 @@ struct NIBERegisterReadTests
         (30, .decimal(-5), [0xFFFB]),
         (34, .decimal(Decimal(string: "21.5")!), [215]),
         (56, .string("LARGE"), [2]),
-        (92, .decimal(Decimal(string: "1.5")!), [15]),
-        (183, .decimal(Decimal(string: "18.5")!), [185]),
+        (92, .decimal(30), [30]),
+        (93, .decimal(30), [30]),
         (216, .string("DEFROST"), [15]),
         (237, .string("MANUAL"), [1]),
         (783, .string("AUTO"), [0]),
@@ -56,17 +56,17 @@ struct NIBERegisterReadTests
     {
         let url = URL(fileURLWithPath: "DeviceDefinitions/nibe.S2125-SMO-S40.json")
         var definitions = try ModbusDefinition.readByRegister(from: url)
-        let input = ModbusRegisterKey(type: .input, address: 26)
-        let holding = ModbusRegisterKey(type: .holding, address: 26)
-        #expect(definitions[input]?.topic == "system/roomtemperature")
-        #expect(definitions[holding]?.topic == "settings/heatingcurve")
+        let input = ModbusRegisterKey(type: .input, address: 39)
+        let holding = ModbusRegisterKey(type: .holding, address: 39)
+        #expect(definitions[input]?.topic == "system/externalsupplyline")
+        #expect(definitions[holding]?.topic == "settings/customheatingcurve/point7")
         definitions[holding]?.nextReadDate = .distantFuture
         #expect(definitions[input]?.nextReadDate == .distantPast)
         #expect(definitions[holding]?.nextReadDate == .distantFuture)
         // Existing address-only callers get an explicit error rather than silent data loss.
         #expect(throws: (any Error).self) { try ModbusDefinition.read(from: url) }
         let writable = definitions.values.filter { $0.modbusaccess == .readwrite }
-        #expect(writable.count == 36)
+        #expect(writable.count == 34)
         for definition in writable
         {
             #expect(definition.modbustype == .holding)
@@ -74,18 +74,41 @@ struct NIBERegisterReadTests
         }
     }
 
+    @Test
+    func matchesDeviceUSBExportMetadata() throws
+    {
+        let definitions = try ModbusDefinition.readByRegister(from: URL(fileURLWithPath: "DeviceDefinitions/nibe.S2125-SMO-S40.json"))
+        func definition(_ type: ModbusRegisterType, _ address: Int) throws -> ModbusDefinition
+        {
+            try #require(definitions[ModbusRegisterKey(type: type, address: address)])
+        }
+
+        #expect(definitions.count == 79)
+        #expect(definitions[ModbusRegisterKey(type: .input, address: 26)] == nil)
+        #expect(definitions[ModbusRegisterKey(type: .holding, address: 94)] == nil)
+        #expect(definitions[ModbusRegisterKey(type: .holding, address: 183)] == nil)
+        #expect(try definition(.holding, 20).factor == Decimal(string: "0.1"))
+        #expect(try definition(.holding, 92).topic == "settings/hotwaterperiod")
+        #expect(try definition(.holding, 92).factor == nil)
+        #expect(try definition(.holding, 93).topic == "settings/heatingperiod")
+        #expect(try definition(.holding, 93).factor == nil)
+        #expect(try definition(.input, 1491).valuetype == .uint32)
+        #expect(try definition(.input, 1491).factor == nil)
+        #expect(try definition(.input, 1493).factor == nil)
+        #expect(try definition(.input, 1975).valuetype == .int16)
+    }
+
     private static let registerCases: [(Int, [UInt16], Double)] = [
         (1489, [UInt16(1_234), 0], 1_234.0),
         (1489, [UInt16(0x5678), 0x1234], 305_419_896.0),
-        (1491, [UInt16(6), 0], 0.6),
-        (1493, [UInt16(15), 0], 1.5),
+        (1491, [UInt16(6), 0], 6.0),
+        (1493, [UInt16(15), 0], 15.0),
         (1583, [UInt16(1), 0], 0.1),
         (1585, [UInt16(324), 0], 32.4),
         (1805, [UInt16(1)], 1.0),
         (400, [UInt16(42)], 42.0),
-        (1975, [UInt16(40_000)], 40_000.0),
+        (1975, [UInt16(42)], 42.0),
         (1478, [UInt16(bitPattern: -125)], -12.5),
-        (26, [UInt16(215)], 21.5),
         (39, [UInt16(350)], 35.0),
         (88, [UInt16(285)], 28.5),
         (401, [UInt16(850)], 850.0),
@@ -94,7 +117,9 @@ struct NIBERegisterReadTests
         (555, [UInt16(bitPattern: -25)], -2.5),
         (1066, [UInt16(1)], 1.0),
         (1475, [UInt16(300)], 30.0),
+        (1556, [UInt16(2)], 2.0),
         (1636, [UInt16(75)], 75.0),
+        (2158, [UInt16(3)], 3.0),
         (2196, [UInt16(1)], 1.0),
     ]
 
@@ -104,7 +129,13 @@ struct NIBERegisterReadTests
         let definitions = try ModbusDefinition.readByRegister(from: URL(fileURLWithPath: "DeviceDefinitions/nibe.S2125-SMO-S40.json"))
         let definition = try #require(definitions[ModbusRegisterKey(type: .input, address: address)])
         let payload = try await readPayload(definition: definition, words: words)
-        let expectedStates = [1805: "ACTIVE", 1066: "ON", 2196: "HOT_WATER"]
+        let expectedStates = [
+            1066: "ON",
+            1556: "HOT_WATER",
+            1805: "ACTIVE",
+            2158: "LOW_FLOW",
+            2196: "HOT_WATER",
+        ]
         if let expectedState = expectedStates[address]
         {
             #expect(payload["value"] as? String == expectedState)

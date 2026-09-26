@@ -1,12 +1,13 @@
 ---
 title: "NIBE S2125 / SMO S40 register audit"
-description: "Counter word order, numeric byte decoding, scaling, and unresolved model-specific registers checked against NIBE documentation and MQTT telemetry."
+description: "NIBE counter decoding, scaling, settings, and model-specific availability checked against documentation, live telemetry, REST metadata, and the controller USB export."
 audience:
   - agents
   - maintainers
 status: "active"
 related:
   - "device-definitions.md"
+  - "nibe-s2125-smo-s40-device-registers.csv"
   - "../DeviceDefinitions/nibe.S2125-SMO-S40.json"
   - "../Sources/SwiftLibModbus2MQTT/ModbusDefinitionIO.swift"
   - "../Tests/modbus2mqttTests/NIBERegisterReadTests.swift"
@@ -14,7 +15,7 @@ related:
 
 # S2125 / SMO S40 register audit
 
-Reviewed on 2026-09-25. The filename is `nibe.S2125-SMO-S40.json`; the initial commit description called it S2150. This audit concerns S2125/F2120 slave 1 (EB101) behind SMO S40.
+Reviewed on 2026-09-26. The filename is `nibe.S2125-SMO-S40.json`; the initial commit description called it S2150. This audit concerns S2125/F2120 slave 1 (EB101) behind SMO S40.
 
 ## Sources and confidence
 
@@ -23,41 +24,46 @@ Reviewed on 2026-09-25. The filename is `nibe.S2125-SMO-S40.json`; the initial c
 - The user confirmed that **Technical information Modbus S-Series.2026.pdf** is the same document as the official TIF EN 2608 download. The local file was inaccessible to the process, so the official copy was used; the SMO S40 and S2125 slave 1 tables on pages 10 and 12 were visually checked.
 - Read-only MQTT observation of `nibe/#` on the user-provided broker. Counter samples below were retained messages; they establish what was published, not the controller's current display or register contents.
 - A 310-second capture saw all 35 configured topics and fresh publications on 10 of them. Compressor frequency was freshly reported as zero; the counters were observed only as retained messages during that interval.
+- The device REST API returned 1,165 point records containing English titles, Modbus metadata, writeability flags, descriptions and a live value snapshot.
+- Two menu 7.5.9 USB exports from the controller were byte-identical. Each contains 1,164 German-language Modbus rows: 604 input registers and 560 holding registers. They match the REST address, area, divisor, unit, value type, limits and defaults, apart from localized units and omitted limits for date/time values. The REST-only `MODBUS_NO_REGISTER` point explains the one-row difference.
+- [The generated English CSV catalogue](nibe-s2125-smo-s40-device-registers.csv) preserves the metadata, writeability flags and current MQTT-definition mapping without copying live values.
 - Checked-out `SwiftLibModbus` typed-read implementation and loopback Modbus TCP regression tests.
 
-The controller's own USB CSV export remains the best source for firmware- and installation-specific availability. Export all registers through menu 7.5.9 and compare operating values with menu 3.1. Do not substitute another model's addresses solely because its table includes a similar label.
+The controller's own REST and USB exports are the best sources for this firmware and installation. Do not substitute another model's addresses solely because its table includes a similar label. Three exported rows use address zero and are not safe polling targets; one REST point has no Modbus register.
 
 ## Confirmed defects and local corrections
 
 1. **32-bit word order:** all five 32-bit values in this definition used the default high-word-first decoder. Set `endianness: littleEndian` for 1489, 1491, 1493, 1583, and 1585. With the checked-out dependency on supported little-endian macOS/Linux targets, that combines libmodbus's host-order UInt16 words low-word-first; it does not reverse each register's wire bytes.
-2. **Runtime scaling:** 1491 and 1493 need multiplication by 0.1 to publish hours. NIBE's factor column is a divisor, whereas this project's `factor` is a multiplier. The S2125 table explicitly specifies signed 32-bit for 1491; that entry now uses `int32`. The hot-water counter 1493 is supported by the other-module table, so its availability on this installation still needs the CSV/display check.
+2. **Runtime scaling and type:** the device exports specify `u32`, divisor 1 and hours for 1491 and 1493. Both therefore use `uint32` without a factor. This supersedes the earlier interpretation of the abbreviated manual table. The exports confirm that 1493 is available on this installation. Exported signed minimum values for these unsigned counters are internally inconsistent and are not imported.
 3. **Numeric 8-bit reads:** the default dependency UInt8 read selected the high byte, so a register containing `0x0001` became zero. The package-local reader now reads one UInt16 register and narrows its low byte for both `uint8` and `int8`. String, hexadecimal, IP and MAC byte reads are unchanged. This correction also affects other device definitions using numeric 8-bit values.
-4. **Alarm number 1975:** the common-register table specifies `u16`; changed from `int16` to `uint16` so large alarm identifiers are not negative.
+4. **Alarm number 1975:** the exact-device exports specify `s16`, conflicting with the common-register manual's `u16`. The device-specific definition follows the exports and uses `int16`.
+5. **Settings metadata:** holding register 20 uses divisor 10; registers 92 and 93 use divisor 1 and represent hot-water and heating periods respectively. The previous definition had the period topics reversed and scaled both by 0.1. Custom heating-curve registers 39 through 45 are points P7 through P1, in descending order.
+6. **Unavailable optional registers:** input 26 (BT50), holding 94 (cooling period) and holding 183 (cooling start temperature) are absent from both exact-device exports and are omitted. This avoids polling registers that this installation rejects or does not advertise.
+7. **State maps:** REST descriptions provide named states for compressor request 1556 and last-defrost result 2158; those maps are now included.
 
-MQTT topics and register addresses are preserved. These are source changes, not a deployment or a change to the heat pump.
+These are source changes, not a deployment or a change to the heat pump. Correcting registers 39-45 and 92-93 changes which register supplies each existing MQTT topic so that the topic meaning matches the controller export.
 
 ## Observed counter values
 
 | Register / topic suffix | Published value | Interpretation after word-order and scale corrections |
 | --- | ---: | ---: |
 | 1489 / `heatpump/compressorstarts` | 0 | 0 |
-| 1491 / `heatpump/compressoroperatingtime` | 393216 h | 0.6 h |
+| 1491 / `heatpump/compressoroperatingtime` | 393216 h | 6 h |
 | 1493 / `heatpump/compressoroperatingtimehotwater` | 0 h | 0 h |
 | 1583 / `energy/hotwatercompressor` | 6553.6 kWh | 0.1 kWh |
 | 1585 / `energy/heatingcompressor` | 2123366.4 kWh | 32.4 kWh |
 
-These are deterministic reinterpretations of the captured payloads, not independently verified physical totals. For example, 393216 is `0x00060000`; reversing its words gives 6, then scaling gives 0.6 h. Zero remains zero under word swapping: the reported zero compressor-start count is not explained by this correction. Check the controller's display, firmware export, and fresh raw registers 1489-1490 before claiming that symptom is resolved.
+These are deterministic reinterpretations of the captured payloads, corroborated by the REST snapshot: 393216 is `0x00060000`, and reversing its words gives the exported value of 6 hours. Zero remains zero under word swapping: the reported zero compressor-start count is not explained by this correction. A direct controller-display comparison remains useful for physical-total verification.
 
-## Coverage and remaining questions
+## Coverage established by the device exports
 
-The initial definition had 35 entries. The following audit describes those existing entries; the 2026 expansion below brings the total to 82 (46 input readings and 36 read/write settings):
+The initial definition had 35 entries. After the 2026 expansion and exact-device corrections, the curated definition has 79 entries: 45 input readings and 34 read/write holding settings.
 
 - Addresses/types/scales agree with the supplied matching-model or common tables: 1, 8, 9, 40, 400, 550, 1478, 1479, 1480, 1481, 1621, 1622, 1803, 1805, 2195. Numeric `uint8` entries still need the reader correction described above.
-- Corrected counters or types: 1489, 1491, 1493, 1583, 1585, 1975. Address 1493 remains subject to the model-availability caveat.
-- **301 requested frequency:** the PDF says `u8`, Hz, factor 10; the definition uses factor 1. An unsigned byte divided by 10 tops out at 25.5 Hz, making this specification suspect. The observed zero cannot resolve the scale. Leave it unchanged pending a running-compressor sample and controller CSV; compare with 1803 and the separate 1854 requested-frequency value.
-- **1802 pressure:** the PDF lists this under F2040, not in the S2125 table. The running map labels it BP8 and publishes 5.8 bar, but that does not establish the sensor identity or scale. Leave it unchanged pending the controller export. Address 550 is a pressure-derived temperature in degrees Celsius, so it must not be relabelled as bar.
-- **1485 and 1495:** the supplied ground-source module table includes these timer/alarm addresses, but the S2125 shortlist does not. Preserve them pending the device export.
-- Not established by the relevant tables: 37, 407, 408, 1108, 1109, 1453, 1556, 1854, 1976, 2158. Absence from this shortlist is not proof a register is invalid.
+- Corrected counters or types: 1489, 1491, 1493, 1583, 1585 and 1975.
+- The exports confirm that requested frequency 301 is unscaled `u8` Hz.
+- They confirm that 1802 is signed 16-bit low pressure in bar with divisor 10. Address 550 remains a pressure-derived temperature in degrees Celsius.
+- They confirm 1485 and 1495 and every previously unresolved existing entry: 37, 407, 408, 1108, 1109, 1453, 1556, 1854, 1976 and 2158.
 
 Register 407's MQTT `null` is the bridge's UInt16 `0xFFFF` sentinel handling, not evidence of a zero-minute countdown. A zero flow reading at 40 also does not establish whether the required flow sensor/accessory is fitted. No address-wide +1/-1 correction is justified: the documented compressor-start address is already 1489 and several temperatures are plausible.
 
@@ -67,7 +73,6 @@ Added the missing input-register telemetry from the SMO S40 and S2125/F2120 slav
 
 | Register | New MQTT topic suffix | Published units / states |
 | --- | --- | --- |
-| 26 | `system/roomtemperature` | degrees Celsius |
 | 39 | `system/externalsupplyline` | degrees Celsius |
 | 88 | `system/returnline` | degrees Celsius |
 | 401 | `heatpump/fanspeed` | rpm |
@@ -79,21 +84,21 @@ Added the missing input-register telemetry from the SMO S40 and S2125/F2120 slav
 | 1636 | `heatpump/chargepumpspeed` | percent |
 | 2196 | `system/divertervalve` | HEATING / HOT_WATER |
 
-All additions are read-only, use FC04, and poll every 30 seconds except room temperature (60 seconds). Temperature registers are signed 16-bit with factor 0.1. Fan speed is unsigned 16-bit; pump/valve registers are unsigned 8-bit. Existing topics, addresses, value types and polling intervals remain compatible with the preceding corrected definition. Labels now distinguish condenser supply and evaporator inlet, and identify 2195 as active alarm without changing its numeric payload.
+All retained additions are read-only and use FC04. Temperature registers are signed 16-bit with factor 0.1. Fan speed is unsigned 16-bit; pump/valve registers are unsigned 8-bit. Labels distinguish condenser supply and evaporator inlet, and identify 2195 as active alarm without changing its numeric payload. Input 26 was removed after both live rejection and absence from the exact-device exports.
 
 Two documentation details require care: 551 is explicitly a temperature despite its pressure label; 1636 has percent units but also an off/on legend. The map retains its numeric percentage, consistent with the earlier manual, rather than mapping every nonzero speed to a status. Actual accessory/sensor availability still depends on the installation.
 
-GSHP-only valves and other outdoor units are outside this definition. The unresolved entries above are preserved, including the existing requested-frequency scale. The 8-bit topics require a bridge build containing the package-local numeric-byte reader correction; replacing the JSON alone in an older image does not fix that decoder.
+GSHP-only valves and other outdoor units are outside this definition. The 8-bit topics require a bridge build containing the package-local numeric-byte reader correction; replacing the JSON alone in an older image does not fix that decoder.
 
 ## Read/write settings
 
 The SMO S40 settings on pages 10-11 and common R/W registers on pages 15-16 are included as FC03 holding registers with `modbusaccess: readwrite`, polled every 60 seconds. Their MQTT topic suffixes start with `settings/`. Documented R/W settings should be usable without editing the JSON to enable writes.
 
-The 36 settings cover degree minutes, cooling degree minutes, alarm reset, heating curve/offset and seven custom curve points, minimum/maximum supply temperatures, hot-water demand and normal start/stop temperatures, heating/hot-water/cooling periods, compressor/additional-heat degree-minute thresholds, automatic-mode temperature thresholds, alarm actions, manual-mode heat/cooling permissions, operating mode, charge-pump mode, AUX10/AUX11 functions and calculated heating/cooling supply temperatures. Accessory-specific R/W settings for modules not represented by this SMO S40/S2125 definition are not included.
+The 34 settings cover degree minutes, cooling degree minutes, alarm reset, heating curve/offset and seven custom curve points, minimum/maximum supply temperatures, hot-water demand and normal start/stop temperatures, heating/hot-water periods, compressor/additional-heat degree-minute thresholds, automatic-mode heating thresholds, alarm actions, manual-mode heat/cooling permissions, operating mode, charge-pump mode, AUX10/AUX11 functions and calculated heating/cooling supply temperatures. Cooling period 94 and cooling start temperature 183 are absent from this controller's exports and are not polled. The REST API marks reset alarm 22 and operating mode 237 non-writable, while the Modbus manual marks them R/W; the definition retains documented Modbus write access because REST and Modbus permissions may differ.
 
-Write requests use the existing MQTT contract. For a base topic `nibe`, publish to `nibe/request/change` with a fresh ISO-8601 `date`, a new UUID `id`, `topic: "settings/operatingmode"` and `value: "AUTO"` (or numeric 0). The response arrives at `nibe/response/change`. Setpoints are supplied in published engineering units: e.g. supply temperature 21.5 is encoded as 215. Values outside the declared integer range or that cannot be represented exactly after scaling are rejected. The document does not provide full setting-specific ranges; the controller still determines which values and modes it accepts. A controller configured for reading only cannot accept writes even when the JSON allows them.
+Write requests use the existing MQTT contract. For a base topic `nibe`, publish to `nibe/request/change` with a fresh ISO-8601 `date`, a new UUID `id`, `topic: "settings/operatingmode"` and `value: "AUTO"` (or numeric 0). The response arrives at `nibe/response/change`. Setpoints are supplied in published engineering units: e.g. supply temperature 21.5 is encoded as 215. Values outside the integer type or that cannot be represented exactly after scaling are rejected. The generated CSV records setting-specific raw limits, but the bridge does not yet enforce them; the controller determines which values and modes it accepts. A controller configured for reading only cannot accept writes even when the JSON allows them.
 
-Input 26 (room temperature) and holding 26 (heating curve), as well as addresses 39 and 40, legitimately coexist. Loading and both polling loops now key definitions by register area plus address. The legacy address-only loader still explicitly rejects these collisions; use `readByRegister(from:)` for this definition.
+Input and holding registers 39 and 40 legitimately coexist. Loading and both polling loops key definitions by register area plus address. The legacy address-only loader explicitly rejects these collisions; use `readByRegister(from:)` for this definition.
 
 The writer now supports signed/unsigned 8-bit settings as complete 16-bit registers and signed 32-bit writes using FC16. Register 11 uses factor 0.1 and low-word-first order. Numeric and mapped string requests use the same conversion path. A rebuilt bridge is required for these writer and loader changes; this work does not deploy the bridge or issue writes to the physical heat pump.
 
@@ -110,10 +115,10 @@ fails twice, and FC03 holding address 26 succeeds with value 8. This is specific
 the input reading, not a general FC04 failure or an input/holding address collision.
 No controller writes or deployment changes were made during diagnosis.
 
-The official SMO S40 table documents input 26, but actual availability depends on
-the controller and installed/activated accessories. An absent or inactive BT50 is
-a plausible explanation, not established by these probes; check menu 7.5.9's own
-register export before changing the bundled definition globally.
+The official SMO S40 table documents input 26, but both the REST catalogue and
+menu 7.5.9 USB export omit it on this controller. The device-specific bundled
+definition therefore no longer polls it. An absent or inactive BT50 remains the
+likely explanation.
 
 At this revision, `MultiDeviceServing.poll` does not log individual register reads
 at debug/trace level, and its catch log omits the selected definition. SIGUSR1 does
@@ -132,8 +137,8 @@ deployed revision before this fix.
 
 `NIBERegisterReadTests` runs a local FC04 server and passes responses through the actual dependency reader, device definition and MQTT JSON encoder. It covers a nonzero compressor-start count, distinct high/low words, captured runtime/energy patterns, an active defrost status, a nonzero alarm, negative temperature and signed 8-bit decoding. The original implementation fails these counter/byte checks; the corrections pass. No live heat pump or MQTT broker is required for these tests.
 
-The regression cases also cover every added input register, including percent pump speed, negative temperature and mapped pump/valve states. Physical counter totals remain unverified until a direct controller/display comparison is available.
+The regression cases also cover every retained added input register, including percent pump speed, negative temperature and mapped pump/valve states. They cover the new compressor-request and last-defrost maps and the exact-device metadata corrections. Physical counter totals remain unverified until a direct controller/display comparison is available.
 
-Wire tests cover the original input readings and FC16 writes followed by FC03 reads for representative settings, including signed values, inverse scaling, enum names and two-register word order. Separate checks cover overlapping register areas, independent polling dates, supported writes for all 36 settings, and rejection of fractional/out-of-range integers.
+Wire tests cover the original input readings and FC16 writes followed by FC03 reads for representative settings, including signed values, inverse scaling, enum names and two-register word order. Separate checks cover overlapping register areas, independent polling dates, supported writes for all 34 settings, and rejection of fractional/out-of-range integers.
 
-Final validation: `swift build` succeeded and all 48 tests in 8 suites passed. JSON validation confirmed 82 unique register-area/address pairs and MQTT topics, all 36 expected R/W settings, unchanged input definitions and unambiguous mapped names. Documentation front matter, local links and `git diff --check` passed. Physical-device writes were not used for validation.
+Final validation for the 2026-09-26 source update: `swift build` succeeded and all 49 tests in 8 suites passed. JSON validation confirmed 79 unique register-area/address pairs and MQTT topics, all 34 expected R/W settings, and no type or scaling mismatch against the exact-device exports. The generated CSV parses as 1,165 data rows, includes all 79 curated definitions, and omits live values. Documentation front matter, local links and `git diff --check` passed. Physical-device writes were not used for validation.

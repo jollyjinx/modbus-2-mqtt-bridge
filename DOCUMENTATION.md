@@ -13,6 +13,8 @@ related:
   - "docs/architecture.md"
   - "docs/container-builds.md"
   - "docs/device-definitions.md"
+  - "docs/nibe-s2125-smo-s40-audit.md"
+  - "docs/nibe-s2125-smo-s40-device-registers.csv"
   - "docs/mqtt-request-response.md"
   - "docs/MULTI_DEVICE_ARCHITECTURE.md"
   - "docs/mqtt-unchanged-publish-interval-plan.md"
@@ -48,7 +50,8 @@ Use the front matter to describe the file before the Markdown body begins. Keep 
 - [Container Builds](docs/container-builds.md): local image builds and multi-platform publication to Gitmaster or GHCR.
 - [Multi-device Architecture](docs/MULTI_DEVICE_ARCHITECTURE.md): shared endpoints, logical devices, MQTT routing, recovery, and validation.
 - [Device Definitions](docs/device-definitions.md): JSON device definition format and bundled device files.
-- [NIBE S2125 / SMO S40 Audit](docs/nibe-s2125-smo-s40-audit.md): counter word order, byte decoding, and remaining register verification.
+- [NIBE S2125 / SMO S40 Audit](docs/nibe-s2125-smo-s40-audit.md): register decoding and exact-device verification against REST and USB exports.
+- [NIBE S2125 / SMO S40 Device Register Catalogue](docs/nibe-s2125-smo-s40-device-registers.csv): English CSV metadata catalogue with curated-definition and MQTT-topic mapping.
 - [MQTT Request/Response](docs/mqtt-request-response.md): write flow for Modbus values through MQTT.
 - [Unchanged Publish Interval](docs/mqtt-unchanged-publish-interval-plan.md): implemented heartbeat policy, design, and verification record.
 - [Documentation Style](docs/documentation-style.md): rules for adding or changing documentation files.
