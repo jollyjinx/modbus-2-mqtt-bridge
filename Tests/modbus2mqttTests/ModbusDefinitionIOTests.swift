@@ -110,6 +110,27 @@ struct ModbusDefinitionIOTests
         #expect(object["value"] as? Double == 1_200)
     }
 
+    @Test(arguments: [
+        (Float32(-1_250.4), Decimal(-1), Optional(Decimal(1)), Double(1_250)),
+        (Float32(-1_250.5), Decimal(-1), nil, Double(1_250.5)),
+        (Float32(1_234.5), Decimal(string: "0.001")!, Optional(Decimal(string: "0.01")!), Double(1.2345)),
+        (Float32(1_250.5), Decimal(string: "0.1")!, nil, Double(125.05)),
+        (Float32(0), Decimal(-1), Optional(Decimal(1)), Double(0)),
+        (Float32(31.25), Decimal(1), Optional(Decimal(string: "0.01")!), Double(31.25)),
+    ])
+    func JSONAppliesFloatFactorAfterResolution(input: Float32,
+                                               factor: Decimal,
+                                               resolution: Decimal?,
+                                               expected: Double) throws
+    {
+        let definition = try makeDefinition(valueType: "float32", factor: factor, resolution: resolution)
+        let value = ModbusValue(address: 1, value: .float32(input))
+        let data = Data(try value.json(using: definition).utf8)
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let actual = try #require(object["value"] as? Double)
+        #expect(abs(actual - expected) < 0.00001)
+    }
+
     @Test
     func valuesInSameResolutionBucketAreEqualForPublication() throws
     {

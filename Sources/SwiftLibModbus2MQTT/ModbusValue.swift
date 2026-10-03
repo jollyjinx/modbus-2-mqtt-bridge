@@ -266,9 +266,9 @@ private struct ModbusValuePayload: Encodable
                         try container.encode(mbd.hasFactor ? Decimal(value) * mbd.factor! : Decimal(value), forKey: .value)
                     }
 
-                case let .float32(value): try container.encode(value, forKey: .value)
+                case let .float32(value): try container.encode(mbd.hasFactor ? value * NSDecimalNumber(decimal: mbd.factor!).floatValue : value, forKey: .value)
 
-                case let .decimal(value): try container.encode(value, forKey: .value)
+                case let .decimal(value): try container.encode(mbd.hasFactor ? value * mbd.factor! : value, forKey: .value)
 
                 case let .string(value): try container.encode(value, forKey: .value)
             }

@@ -45,7 +45,7 @@ Common fields include:
 - `length`: length for value types that need it, especially strings.
 - `endianness`: optional register byte order, `bigEndian` or `littleEndian`.
 - `interval`: polling interval in seconds. `0` means the value is requested at startup and then retained through MQTT.
-- `factor`: optional multiplier applied to numeric values.
+- `factor`: optional multiplier applied to numeric values, including `float32`. Float values are rounded to `resolution` before scaling; for example, `factor: -1` reverses the published power direction without changing register reads.
 - `resolution`: optional positive rounding increment for `float32` values.
 - `unit`: optional display unit.
 - `mqtt`: MQTT visibility or retention behavior, such as `visible`, `invisible`, or `retained`.
